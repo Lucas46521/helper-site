@@ -102,7 +102,7 @@ export default function Home() {
             )}
           </div>
           <div className="absolute -inset-4 bg-gradient-to-r from-cyan-400 to-blue-600 rounded-full opacity-20 blur-xl animate-ping"></div>
-        </div></div>
+        </div>
 
         {/* Bot Name */}
         <h1 className="text-5xl md:text-7xl font-bold text-white mb-4 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent animate-pulse">
@@ -123,7 +123,7 @@ export default function Home() {
               <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">✓ Verificado</span>
             )}
           </div>
-        )}</p>
+        )}
 
         {/* Features */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 max-w-4xl">
@@ -183,7 +183,6 @@ export default function Home() {
             <div className="text-2xl font-bold text-green-400">24/7</div>
             <div className="text-gray-400 text-sm">Online</div>
           </div>
-        </div>
         </div>
       </div>
     </div>
