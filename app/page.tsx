@@ -1,103 +1,142 @@
+
+"use client";
+
 import Image from "next/image";
+import { useEffect, useState } from "react";
+
+interface Lightning {
+  id: number;
+  x: number;
+  y: number;
+  delay: number;
+  duration: number;
+}
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [lightnings, setLightnings] = useState<Lightning[]>([]);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  useEffect(() => {
+    // Generate random micro lightning bolts
+    const generateLightnings = () => {
+      const newLightnings: Lightning[] = [];
+      for (let i = 0; i < 20; i++) {
+        newLightnings.push({
+          id: i,
+          x: Math.random() * 100,
+          y: Math.random() * 100,
+          delay: Math.random() * 5,
+          duration: 1 + Math.random() * 2,
+        });
+      }
+      setLightnings(newLightnings);
+    };
+
+    generateLightnings();
+    const interval = setInterval(generateLightnings, 8000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="relative min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 overflow-hidden">
+      {/* Micro Lightning Background */}
+      <div className="absolute inset-0">
+        {lightnings.map((lightning) => (
+          <div
+            key={lightning.id}
+            className="absolute w-0.5 h-8 bg-gradient-to-b from-cyan-400 to-transparent opacity-0 animate-lightning"
+            style={{
+              left: `${lightning.x}%`,
+              top: `${lightning.y}%`,
+              animationDelay: `${lightning.delay}s`,
+              animationDuration: `${lightning.duration}s`,
+            }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
+            <div className="absolute inset-0 bg-white blur-sm opacity-50"></div>
+          </div>
+        ))}
+      </div>
+
+      {/* Gradient Overlay */}
+      <div className="absolute inset-0 bg-black bg-opacity-30"></div>
+
+      {/* Main Content */}
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-8 text-center">
+        {/* Bot Avatar/Logo */}
+        <div className="mb-8 relative">
+          <div className="w-32 h-32 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-full flex items-center justify-center text-6xl shadow-2xl shadow-cyan-500/25 animate-pulse">
+            🤖
+          </div>
+          <div className="absolute -inset-4 bg-gradient-to-r from-cyan-400 to-blue-600 rounded-full opacity-20 blur-xl animate-ping"></div>
+        </div>
+
+        {/* Bot Name */}
+        <h1 className="text-5xl md:text-7xl font-bold text-white mb-4 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent animate-pulse">
+          MeuBot
+        </h1>
+
+        {/* Bot Description */}
+        <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-2xl leading-relaxed">
+          Seu assistente inteligente no Discord
+        </p>
+
+        {/* Features */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 max-w-4xl">
+          <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 border border-cyan-500/20 hover:border-cyan-400/40 transition-all duration-300 hover:transform hover:scale-105">
+            <div className="text-3xl mb-3">⚡</div>
+            <h3 className="text-lg font-semibold text-white mb-2">Ultra Rápido</h3>
+            <p className="text-gray-300 text-sm">Respostas instantâneas para todos os comandos</p>
+          </div>
+          
+          <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 border border-purple-500/20 hover:border-purple-400/40 transition-all duration-300 hover:transform hover:scale-105">
+            <div className="text-3xl mb-3">🎵</div>
+            <h3 className="text-lg font-semibold text-white mb-2">Música</h3>
+            <p className="text-gray-300 text-sm">Reproduz suas músicas favoritas com qualidade</p>
+          </div>
+          
+          <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300 hover:transform hover:scale-105">
+            <div className="text-3xl mb-3">🛡️</div>
+            <h3 className="text-lg font-semibold text-white mb-2">Moderação</h3>
+            <p className="text-gray-300 text-sm">Mantém seu servidor seguro e organizado</p>
+          </div>
+        </div>
+
+        {/* Call to Action */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <a
+            href="#"
+            className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold py-4 px-8 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg shadow-cyan-500/25"
+          >
+            🔗 Adicionar ao Discord
           </a>
+          
           <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="#"
+            className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-gray-900 font-bold py-4 px-8 rounded-full transition-all duration-300 transform hover:scale-105"
           >
-            Read our docs
+            📚 Comandos
           </a>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* Stats */}
+        <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          <div>
+            <div className="text-2xl font-bold text-cyan-400">500+</div>
+            <div className="text-gray-400 text-sm">Servidores</div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-blue-400">10K+</div>
+            <div className="text-gray-400 text-sm">Usuários</div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-purple-400">99.9%</div>
+            <div className="text-gray-400 text-sm">Uptime</div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-green-400">24/7</div>
+            <div className="text-gray-400 text-sm">Online</div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
