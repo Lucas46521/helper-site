@@ -124,55 +124,50 @@ export default function ElectricBackground() {
     }
 
     function drawEnergyMatrix(matrix: typeof energyMatrices[0]) {
-      ctx.save();
-      ctx.translate(matrix.x, matrix.y);
-      ctx.rotate(matrix.rotation);
-      
-      const pulse = 0.8 + 0.3 * Math.sin(matrix.pulsePhase + matrix.time * 0.1);
-      const size = matrix.gridSize * pulse;
-      
-      // Outer glow
-      ctx.shadowColor = `rgba(0, ${150 + matrix.energy}, 255, 0.8)`;
-      ctx.shadowBlur = 30;
-      
-      // Matrix grid
-      ctx.strokeStyle = `rgba(0, ${100 + matrix.energy}, 255, 0.7)`;
-      ctx.lineWidth = 2;
-      
-      // Draw grid lines
-      for (let i = -2; i <= 2; i++) {
-        ctx.beginPath();
-        ctx.moveTo(-size, i * size / 2);
-        ctx.lineTo(size, i * size / 2);
-        ctx.stroke();
-        
-        ctx.beginPath();
-        ctx.moveTo(i * size / 2, -size);
-        ctx.lineTo(i * size / 2, size);
-        ctx.stroke();
-      }
-      
-      // Central energy core
-      ctx.beginPath();
-      ctx.arc(0, 0, size / 4, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(0, ${200 + matrix.energy / 2}, 255, 0.8)`;
-      ctx.fill();
-      
-      // Energy particles around matrix
-      for (let i = 0; i < 8; i++) {
-        const angle = (i / 8) * Math.PI * 2 + matrix.time * 0.05;
-        const radius = size * 0.7;
-        const px = Math.cos(angle) * radius;
-        const py = Math.sin(angle) * radius;
-        
-        ctx.beginPath();
-        ctx.arc(px, py, 2, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(0, 255, ${150 + Math.sin(matrix.time * 0.1 + i) * 100}, 0.9)`;
-        ctx.fill();
-      }
-      
-      ctx.restore();
-    }
+  ctx!.save();
+  ctx!.translate(matrix.x, matrix.y);
+  ctx!.rotate(matrix.rotation);
+
+  const pulse = 0.8 + 0.3 * Math.sin(matrix.pulsePhase + matrix.time * 0.1);
+  const size = matrix.gridSize * pulse;
+
+  ctx!.shadowColor = `rgba(0, ${150 + matrix.energy}, 255, 0.8)`;
+  ctx!.shadowBlur = 30;
+
+  ctx!.strokeStyle = `rgba(0, ${100 + matrix.energy}, 255, 0.7)`;
+  ctx!.lineWidth = 2;
+
+  for (let i = -2; i <= 2; i++) {
+    ctx!.beginPath();
+    ctx!.moveTo(-size, i * size / 2);
+    ctx!.lineTo(size, i * size / 2);
+    ctx!.stroke();
+
+    ctx!.beginPath();
+    ctx!.moveTo(i * size / 2, -size);
+    ctx!.lineTo(i * size / 2, size);
+    ctx!.stroke();
+  }
+
+  ctx!.beginPath();
+  ctx!.arc(0, 0, size / 4, 0, Math.PI * 2);
+  ctx!.fillStyle = `rgba(0, ${200 + matrix.energy / 2}, 255, 0.8)`;
+  ctx!.fill();
+
+  for (let i = 0; i < 8; i++) {
+    const angle = (i / 8) * Math.PI * 2 + matrix.time * 0.05;
+    const radius = size * 0.7;
+    const px = Math.cos(angle) * radius;
+    const py = Math.sin(angle) * radius;
+
+    ctx!.beginPath();
+    ctx!.arc(px, py, 2, 0, Math.PI * 2);
+    ctx!.fillStyle = `rgba(0, 255, ${150 + Math.sin(matrix.time * 0.1 + i) * 100}, 0.9)`;
+    ctx!.fill();
+  }
+
+  ctx!.restore();
+}
 
     function draw() {
       if (!ctx) return;
