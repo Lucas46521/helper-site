@@ -1,8 +1,9 @@
+
 "use client";
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import botData from './bot-data.json'; // Assuming bot-data.json is in the same directory
+import botData from './bot-data.json';
 
 interface BotInfo {
   username: string;
@@ -11,8 +12,11 @@ interface BotInfo {
   verified: boolean;
   public: boolean;
   description: string;
-  guildCount?: number;
+  guildCount: number;
+  userCount: number;
+  uptime: string;
   features: { title: string; description: string; icon: string }[];
+  commands: { name: string; description: string; usage: string; category: string }[];
 }
 
 interface Lightning {
@@ -21,6 +25,8 @@ interface Lightning {
   y: number;
   delay: number;
   duration: number;
+  angle: number;
+  length: number;
 }
 
 export default function Home() {
@@ -28,70 +34,71 @@ export default function Home() {
   const [botInfo, setBotInfo] = useState<BotInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
-  //const fetchBotInfo = async () => {  // Removing the fetch and using the local JSON
-  //  try {
-  //    const response = await fetch(`/api/bot-info?id=1015096771661279243`);
-  //    if (response.ok) {
-  //      const data = await response.json();
-  //      setBotInfo(data);
-  //    }
-  //  } catch (error) {
-  //    console.error('Erro ao buscar informações do bot:', error);
-  //  } finally {
-  //    setLoading(false);
-  //  }
-  //};
-
   useEffect(() => {
-    //fetchBotInfo(); // Removing the fetch and using the local JSON
     setBotInfo(botData);
     setLoading(false);
 
-    // Generate random micro lightning bolts
+    // Generate random micro lightning bolts across entire page
     const generateLightnings = () => {
       const newLightnings: Lightning[] = [];
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < 35; i++) {
         newLightnings.push({
           id: i,
           x: Math.random() * 100,
           y: Math.random() * 100,
-          delay: Math.random() * 5,
-          duration: 1 + Math.random() * 2,
+          delay: Math.random() * 6,
+          duration: 0.8 + Math.random() * 1.5,
+          angle: Math.random() * 60 - 30, // -30 to 30 degrees
+          length: 20 + Math.random() * 40, // 20-60px length
         });
       }
       setLightnings(newLightnings);
     };
 
     generateLightnings();
-    const interval = setInterval(generateLightnings, 8000);
+    const interval = setInterval(generateLightnings, 4000);
     return () => clearInterval(interval);
   }, []);
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 overflow-hidden">
-      {/* Micro Lightning Background */}
-      <div className="absolute inset-0">
+      {/* Enhanced Lightning Background across entire page */}
+      <div className="fixed inset-0 pointer-events-none z-0">
         {lightnings.map((lightning) => (
           <div
             key={lightning.id}
-            className="absolute w-0.5 h-8 bg-gradient-to-b from-cyan-400 to-transparent opacity-0 animate-lightning"
+            className="absolute animate-lightning opacity-0"
             style={{
               left: `${lightning.x}%`,
               top: `${lightning.y}%`,
               animationDelay: `${lightning.delay}s`,
               animationDuration: `${lightning.duration}s`,
+              transform: `rotate(${lightning.angle}deg)`,
             }}
           >
-            <div className="absolute inset-0 bg-white blur-sm opacity-50"></div>
+            {/* Main lightning bolt */}
+            <div 
+              className="bg-gradient-to-b from-cyan-400 via-blue-400 to-transparent w-0.5"
+              style={{ height: `${lightning.length}px` }}
+            >
+              <div className="absolute inset-0 bg-white blur-sm opacity-70"></div>
+              <div className="absolute inset-0 bg-cyan-300 blur-xs opacity-50"></div>
+            </div>
+            
+            {/* Lightning glow effect */}
+            <div 
+              className="absolute top-0 left-1/2 transform -translate-x-1/2 bg-cyan-400 opacity-30 blur-md w-2"
+              style={{ height: `${lightning.length * 0.8}px` }}
+            ></div>
           </div>
         ))}
       </div>
 
       {/* Gradient Overlay */}
-      <div className="absolute inset-0 bg-black bg-opacity-30"></div>
+      <div className="absolute inset-0 bg-black bg-opacity-20 z-10"></div>
 
       {/* Main Content */}
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-8 text-center">
+      <div className="relative z-20 flex flex-col items-center justify-center min-h-screen p-8 text-center">
         {/* Bot Avatar/Logo */}
         <div className="mb-8 relative">
           <div className="w-32 h-32 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-full flex items-center justify-center text-6xl shadow-2xl shadow-cyan-500/25 animate-pulse overflow-hidden">
@@ -130,7 +137,7 @@ export default function Home() {
         )}
 
         {/* Features */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 max-w-4xl">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 max-w-6xl">
           {botInfo?.features.map((feature, index) => (
             <div
               key={index}
@@ -164,16 +171,20 @@ export default function Home() {
         <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           <div>
             <div className="text-2xl font-bold text-cyan-400">
-              {loading ? '...' : botInfo?.guildCount ? `${botInfo.guildCount}+` : '500+'}
+              {loading ? '...' : botInfo?.guildCount ? `${botInfo.guildCount}+` : '1500+'}
             </div>
             <div className="text-gray-400 text-sm">Servidores</div>
           </div>
           <div>
-            <div className="text-2xl font-bold text-blue-400">10K+</div>
+            <div className="text-2xl font-bold text-blue-400">
+              {loading ? '...' : botInfo?.userCount ? `${Math.floor(botInfo.userCount / 1000)}K+` : '15K+'}
+            </div>
             <div className="text-gray-400 text-sm">Usuários</div>
           </div>
           <div>
-            <div className="text-2xl font-bold text-purple-400">99.9%</div>
+            <div className="text-2xl font-bold text-purple-400">
+              {loading ? '...' : botInfo?.uptime || '99.9%'}
+            </div>
             <div className="text-gray-400 text-sm">Uptime</div>
           </div>
           <div>

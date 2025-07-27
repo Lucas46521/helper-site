@@ -1,0 +1,121 @@
+
+{
+  "username": "MeuBot",
+  "avatar": "a1b2c3d4e5f6g7h8i9j0",
+  "tag": "MeuBot#1234",
+  "verified": true,
+  "public": true,
+  "description": "Um bot multifuncional repleto de funções uteis e preparado para te ajudar com seu problemas.",
+  "guildCount": 1547,
+  "userCount": 15420,
+  "uptime": "99.9%",
+  "features": [
+    {
+      "title": "Desenvolvimento Constante",
+      "description": "O bot está em desenvolvimento constante, visando melhorias e crescimento",
+      "icon": "🚀"
+    },
+    {
+      "title": "Velocidade Extrema",
+      "description": "É um bot extremamente veloz com respostas instantâneas",
+      "icon": "⚡"
+    },
+    {
+      "title": "Funcionalidades Completas",
+      "description": "Um bot insanamente completo, repleto de funções que te ajudaram nas tarefas mais complexas",
+      "icon": "🛠️"
+    },
+    {
+      "title": "Sistema de Música",
+      "description": "Sistema de música com alta qualidade e controles avançados",
+      "icon": "🎵"
+    },
+    {
+      "title": "Moderação Avançada",
+      "description": "Moderação automática e manual avançada para manter seu servidor seguro",
+      "icon": "🛡️"
+    },
+    {
+      "title": "Sistema de Economia",
+      "description": "Sistema de economia virtual completo com rankings e recompensas",
+      "icon": "💰"
+    },
+    {
+      "title": "Logs Detalhados",
+      "description": "Logs detalhados de atividades do servidor para total transparência",
+      "icon": "📊"
+    },
+    {
+      "title": "Suporte 24/7",
+      "description": "Suporte 24/7 e atualizações constantes para melhor experiência",
+      "icon": "🔧"
+    },
+    {
+      "title": "Entretenimento",
+      "description": "Comandos de diversão e entretenimento para animar seu servidor",
+      "icon": "🎮"
+    }
+  ],
+  "commands": [
+    {
+      "name": "play",
+      "description": "Reproduz uma música no canal de voz",
+      "usage": "/play <música>",
+      "category": "Música"
+    },
+    {
+      "name": "skip",
+      "description": "Pula a música atual",
+      "usage": "/skip",
+      "category": "Música"
+    },
+    {
+      "name": "queue",
+      "description": "Mostra a fila de reprodução",
+      "usage": "/queue",
+      "category": "Música"
+    },
+    {
+      "name": "kick",
+      "description": "Remove um usuário do servidor",
+      "usage": "/kick <@usuário> [motivo]",
+      "category": "Moderação"
+    },
+    {
+      "name": "ban",
+      "description": "Bane um usuário do servidor",
+      "usage": "/ban <@usuário> [motivo]",
+      "category": "Moderação"
+    },
+    {
+      "name": "mute",
+      "description": "Silencia um usuário temporariamente",
+      "usage": "/mute <@usuário> <tempo>",
+      "category": "Moderação"
+    },
+    {
+      "name": "economy",
+      "description": "Sistema de economia virtual completo",
+      "usage": "/economy [opção]",
+      "category": "Economia"
+    },
+    {
+      "name": "balance",
+      "description": "Verifica seu saldo atual",
+      "usage": "/balance [@usuário]",
+      "category": "Economia"
+    },
+    {
+      "name": "logs",
+      "description": "Visualiza logs detalhados do servidor",
+      "usage": "/logs [tipo]",
+      "category": "Moderação"
+    },
+    {
+      "name": "help",
+      "description": "Mostra todos os comandos disponíveis",
+      "usage": "/help [comando]",
+      "category": "Utilidade"
+    }
+  ]
+}
