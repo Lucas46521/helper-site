@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import botData from './bot-data.json'; // Assuming bot-data.json is in the same directory
 
 interface BotInfo {
   username: string;
@@ -11,6 +12,7 @@ interface BotInfo {
   public: boolean;
   description: string;
   guildCount?: number;
+  features: { title: string; description: string; icon: string }[];
 }
 
 interface Lightning {
@@ -26,22 +28,25 @@ export default function Home() {
   const [botInfo, setBotInfo] = useState<BotInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchBotInfo = async () => {
-    try {
-      const response = await fetch(`/api/bot-info?id=1015096771661279243`);
-      if (response.ok) {
-        const data = await response.json();
-        setBotInfo(data);
-      }
-    } catch (error) {
-      console.error('Erro ao buscar informações do bot:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  //const fetchBotInfo = async () => {  // Removing the fetch and using the local JSON
+  //  try {
+  //    const response = await fetch(`/api/bot-info?id=1015096771661279243`);
+  //    if (response.ok) {
+  //      const data = await response.json();
+  //      setBotInfo(data);
+  //    }
+  //  } catch (error) {
+  //    console.error('Erro ao buscar informações do bot:', error);
+  //  } finally {
+  //    setLoading(false);
+  //  }
+  //};
 
   useEffect(() => {
-    fetchBotInfo();
+    //fetchBotInfo(); // Removing the fetch and using the local JSON
+    setBotInfo(botData);
+    setLoading(false);
+
     // Generate random micro lightning bolts
     const generateLightnings = () => {
       const newLightnings: Lightning[] = [];
@@ -91,7 +96,7 @@ export default function Home() {
         <div className="mb-8 relative">
           <div className="w-32 h-32 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-full flex items-center justify-center text-6xl shadow-2xl shadow-cyan-500/25 animate-pulse overflow-hidden">
             {botInfo?.avatar ? (
-              <img 
+              <img
                 src={`https://cdn.discordapp.com/avatars/1015096771661279243/${botInfo.avatar}.png?size=128`}
                 alt={botInfo.username}
                 className="w-full h-full object-cover rounded-full"
@@ -126,23 +131,16 @@ export default function Home() {
 
         {/* Features */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 max-w-4xl">
-          <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 border border-cyan-500/20 hover:border-cyan-400/40 transition-all duration-300 hover:transform hover:scale-105">
-            <div className="text-3xl mb-3">⚡</div>
-            <h3 className="text-lg font-semibold text-white mb-2">Ultra Rápido</h3>
-            <p className="text-gray-300 text-sm">Respostas instantâneas para todos os comandos</p>
-          </div>
-
-          <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 border border-purple-500/20 hover:border-purple-400/40 transition-all duration-300 hover:transform hover:scale-105">
-            <div className="text-3xl mb-3">🎵</div>
-            <h3 className="text-lg font-semibold text-white mb-2">Música</h3>
-            <p className="text-gray-300 text-sm">Reproduz suas músicas favoritas com qualidade</p>
-          </div>
-
-          <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300 hover:transform hover:scale-105">
-            <div className="text-3xl mb-3">🛡️</div>
-            <h3 className="text-lg font-semibold text-white mb-2">Moderação</h3>
-            <p className="text-gray-300 text-sm">Mantém seu servidor seguro e organizado</p>
-          </div>
+          {botInfo?.features.map((feature, index) => (
+            <div
+              key={index}
+              className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 border border-cyan-500/20 hover:border-cyan-400/40 transition-all duration-300 hover:transform hover:scale-105"
+            >
+              <div className="text-3xl mb-3">{feature.icon}</div>
+              <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
+              <p className="text-gray-300 text-sm">{feature.description}</p>
+            </div>
+          ))}
         </div>
 
         {/* Call to Action */}
