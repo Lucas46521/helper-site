@@ -1,21 +1,23 @@
 import { useEffect, useRef, useState } from "react";
 
 export default function ElectricBackground() {
-  const canvasRef = useRef(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isPressed, setIsPressed] = useState(false);
   const lastMouse = useRef({ x: null, y: null });
 
   useEffect(() => {
     const canvas = canvasRef.current;
+    if (!canvas) return; // Verifica se canvas não é null
     const ctx = canvas.getContext("2d");
+    if (!ctx) return; // Verifica se ctx não é null
     let width = (canvas.width = window.innerWidth);
     let height = (canvas.height = window.innerHeight);
-    const sparks = [];
-    const nodes = [];
-    const discharges = [];
-    let animationId;
+    const sparks: { x: number; y: number; vx: number; vy: number; life: number; hits: number }[] = [];
+    const nodes: { x: number; y: number; time: number; permanent: boolean }[] = [];
+    const discharges: { path: [number, number][]; time: number }[] = [];
+    let animationId: number;
 
-    function generateSpark(x, y) {
+    function generateSpark(x: number, y: number) {
       if (sparks.length >= 100) return; // Limite de 100 partículas
       sparks.push({
         x,
@@ -27,7 +29,7 @@ export default function ElectricBackground() {
       });
     }
 
-    function generateNode(x, y, autoRemove = true) {
+    function generateNode(x: number, y: number, autoRemove = true) {
       const node = { x, y, time: 0, permanent: !autoRemove };
       nodes.push(node);
       if (autoRemove) {
@@ -38,15 +40,15 @@ export default function ElectricBackground() {
       }
     }
 
-    function createDischarge(from, to) {
+    function createDischarge(from: { x: number; y: number }, to: { x: number; y: number }) {
       discharges.push({
         path: generateLightningPath(from.x, from.y, to.x, to.y),
         time: 5,
       });
     }
 
-    function generateLightningPath(x1, y1, x2, y2) {
-      const path = [];
+    function generateLightningPath(x1: number, y1: number, x2: number, y2: number) {
+      const path: [number, number][] = [];
       const steps = 10;
       for (let i = 0; i <= steps; i++) {
         const t = i / steps;
@@ -136,7 +138,7 @@ export default function ElectricBackground() {
       animationId = requestAnimationFrame(draw);
     }
 
-    const handleMouseMove = e => {
+    const handleMouseMove = (e: MouseEvent) => {
       for (let i = 0; i < 4; i++) {
         generateSpark(e.clientX, e.clientY);
       }
@@ -144,7 +146,7 @@ export default function ElectricBackground() {
       lastMouse.current.y = e.clientY;
     };
 
-    const handleTouchMove = e => {
+    const handleTouchMove = (e: TouchEvent) => {
       e.preventDefault();
       const touch = e.touches[0];
       for (let i = 0; i < 4; i++) {
@@ -154,12 +156,12 @@ export default function ElectricBackground() {
       lastMouse.current.y = touch.clientY;
     };
 
-    const handleMouseDown = e => {
+    const handleMouseDown = (e: MouseEvent) => {
       generateNode(e.clientX, e.clientY, false);
       setIsPressed(true);
     };
 
-    const handleTouchStart = e => {
+    const handleTouchStart = (e: TouchEvent) => {
       e.preventDefault();
       const touch = e.touches[0];
       generateNode(touch.clientX, touch.clientY, false);
@@ -224,16 +226,17 @@ export default function ElectricBackground() {
         zIndex: -1,
         background: "black",
       }}
-      onMouseMove={e => {
+      onMouseMove={(e) => {
         lastMouse.current.x = e.clientX;
         lastMouse.current.y = e.clientY;
       }}
-      onTouchMove={e => {
+      onTouchMove={(e) => {
         e.preventDefault();
         const touch = e.touches[0];
         lastMouse.current.x = touch.clientX;
         lastMouse.current.y = touch.clientY;
       }}
+      aria-label="Fundo animado com partículas e raios interativos"
     />
   );
 }
