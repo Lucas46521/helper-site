@@ -1,38 +1,40 @@
-
 'use client';
 import { useEffect, useRef } from 'react';
 
 export default function ElectricBackground() {
-  const canvasRef = useRef(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const mouse = useRef({ x: null, y: null });
 
   useEffect(() => {
     const canvas = canvasRef.current;
+    if (!canvas) return; // Verifica se o canvas é null
     const ctx = canvas.getContext('2d');
     let width = (canvas.width = window.innerWidth);
     let height = (canvas.height = window.innerHeight);
 
     const resize = () => {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
+      if (canvas) {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      }
     };
     window.addEventListener('resize', resize);
 
-    const onMouseMove = (e) => {
+    const onMouseMove = (e: MouseEvent) => {
       mouse.current.x = e.clientX;
       mouse.current.y = e.clientY;
     };
     window.addEventListener('mousemove', onMouseMove);
 
-    function drawRay(x, y, length, angle, alpha) {
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      ctx.lineTo(x + Math.cos(angle) * length, y + Math.sin(angle) * length);
-      ctx.strokeStyle = `rgba(0, 200, 255, ${alpha})`;
-      ctx.lineWidth = 1 + Math.random();
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = '#00faff';
-      ctx.stroke();
+    function drawRay(x: number, y: number, length: number, angle: number, alpha: number) {
+      ctx!.beginPath();
+      ctx!.moveTo(x, y);
+      ctx!.lineTo(x + Math.cos(angle) * length, y + Math.sin(angle) * length);
+      ctx!.strokeStyle = `rgba(0, 200, 255, ${alpha})`;
+      ctx!.lineWidth = 1 + Math.random();
+      ctx!.shadowBlur = 10;
+      ctx!.shadowColor = '#00faff';
+      ctx!.stroke();
     }
 
     function randomRay() {
@@ -59,8 +61,8 @@ export default function ElectricBackground() {
     function animate() {
       frame++;
       // Limpa parcialmente para efeito de "persistência"
-      ctx.fillStyle = 'rgba(0, 0, 10, 0.1)';
-      ctx.fillRect(0, 0, width, height);
+      ctx!.fillStyle = 'rgba(0, 0, 10, 0.1)';
+      ctx!.fillRect(0, 0, width, height);
 
       for (let i = 0; i < 5; i++) randomRay();
       for (let i = 0; i < 3; i++) rayNearMouse();
