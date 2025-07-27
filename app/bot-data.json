@@ -106,6 +106,41 @@
       "category": "Economia"
     },
     {
+      "name": "daily",
+      "description": "Coleta sua recompensa diária",
+      "usage": "/daily",
+      "category": "Economia"
+    },
+    {
+      "name": "help",
+      "description": "Mostra todos os comandos disponíveis",
+      "usage": "/help [comando]",
+      "category": "Utilidade"
+    },
+    {
+      "name": "ping",
+      "description": "Verifica a latência do bot",
+      "usage": "/ping",
+      "category": "Utilidade"
+    },
+    {
+      "name": "avatar",
+      "description": "Mostra o avatar de um usuário",
+      "usage": "/avatar [@usuário]",
+      "category": "Utilidade"
+    },
+    {
+      "name": "serverinfo",
+      "description": "Informações sobre o servidor",
+      "usage": "/serverinfo",
+      "category": "Utilidade"
+    }
+  ]
+}
+      "usage": "/balance [@usuário]",
+      "category": "Economia"
+    },
+    {
       "name": "logs",
       "description": "Visualiza logs detalhados do servidor",
       "usage": "/logs [tipo]",
