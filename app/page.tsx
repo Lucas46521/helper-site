@@ -8,7 +8,7 @@ import ElectricBackground from './components/ElectricBackground';
 
 interface BotInfo {
   username: string;
-  avatar: string;
+  avatar: string | null;
   tag: string;
   verified: boolean;
   public: boolean;
@@ -16,6 +16,7 @@ interface BotInfo {
   guildCount: number;
   userCount: number;
   uptime: string;
+  fromDiscordAPI?: boolean;
   features: Array<{
     title: string;
     description: string;
@@ -65,9 +66,17 @@ export default function Home() {
         {botInfo && (
           <div className="mb-8 relative">
             <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 p-1 animate-pulse">
-              <div className="w-full h-full rounded-full bg-gray-800 flex items-center justify-center text-4xl md:text-5xl">
-                🤖
-              </div>
+              {botInfo.avatar ? (
+                <img
+                  src={botInfo.avatar}
+                  alt={`${botInfo.username} avatar`}
+                  className="w-full h-full rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full rounded-full bg-gray-800 flex items-center justify-center text-4xl md:text-5xl">
+                  🤖
+                </div>
+              )}
             </div>
             <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-400 rounded-full flex items-center justify-center">
               <div className="w-4 h-4 bg-green-500 rounded-full animate-ping"></div>
