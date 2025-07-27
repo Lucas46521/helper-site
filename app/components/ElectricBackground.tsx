@@ -8,7 +8,7 @@ export default function ElectricBackground() {
   const [isPressed, setIsPressed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const mousePos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const animationId = useRef<number>();
+  const animationId = useRef<number | null>(null);
 
   useEffect(() => {
     // Detect mobile
