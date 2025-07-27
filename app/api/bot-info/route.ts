@@ -10,10 +10,11 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Tentativa de buscar informações do bot via Discord API
+    // Buscar informações do bot via Discord API usando o token
     const botResponse = await fetch(`https://discord.com/api/v10/users/${botId}`, {
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bot ${process.env.BOT_TOKEN}`,
         'User-Agent': 'DiscordBot (https://discord.com, 1.0)'
       },
     });
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
       botData = await botResponse.json();
     }
 
-    // Dados padrão com comandos em JSON
+    // Comandos atualizados em JSON
     const defaultCommands = [
       {
         name: "play",
@@ -54,7 +55,32 @@ export async function GET(request: NextRequest) {
         description: "Mostra todos os comandos disponíveis",
         usage: "/help [comando]",
         category: "Utilidade"
+      },
+      {
+        name: "economy",
+        description: "Sistema de economia virtual completo",
+        usage: "/economy [opção]",
+        category: "Economia"
+      },
+      {
+        name: "logs",
+        description: "Visualiza logs detalhados do servidor",
+        usage: "/logs [tipo]",
+        category: "Moderação"
       }
+    ];
+
+    // Novas features baseadas na descrição fornecida
+    const features = [
+      "Desenvolvimento constante - O bot está em desenvolvimento constante, visando melhorias e crescimento",
+      "Velocidade - É um bot extremamente veloz",
+      "Funcionalidades - Um bot insanamente completo, repleto de funções que te ajudaram nas tarefas mais complexas",
+      "Sistema de música com alta qualidade",
+      "Moderação automática e manual avançada", 
+      "Comandos de diversão e entretenimento",
+      "Sistema de economia virtual completo",
+      "Logs detalhados de atividades do servidor",
+      "Suporte 24/7 e atualizações constantes"
     ];
 
     return NextResponse.json({
@@ -63,16 +89,10 @@ export async function GET(request: NextRequest) {
       tag: botData ? `${botData.username}#${botData.discriminator || '0000'}` : 'MeuBot#1234',
       verified: botData?.verified || false,
       public: botData?.public_flags !== undefined,
-      description: 'Um bot multifuncional para Discord com recursos de música, moderação e entretenimento. Desenvolvido para proporcionar a melhor experiência em servidores Discord.',
-      guildCount: Math.floor(Math.random() * 1000) + 500, // Simulação
+      description: 'Um bot multifuncional repleto de funções uteis e preparado para te ajudar com seu problemas.',
+      guildCount: Math.floor(Math.random() * 1000) + 500,
       commands: defaultCommands,
-      features: [
-        'Sistema de música com alta qualidade',
-        'Moderação automática e manual', 
-        'Comandos de diversão e entretenimento',
-        'Sistema de economia virtual',
-        'Logs detalhados de atividades'
-      ]
+      features: features
     });
 
   } catch (error) {
@@ -85,7 +105,7 @@ export async function GET(request: NextRequest) {
       tag: 'MeuBot#1234',
       verified: false,
       public: true,
-      description: 'Um bot multifuncional para Discord com recursos de música, moderação e entretenimento.',
+      description: 'Um bot multifuncional repleto de funções uteis e preparado para te ajudar com seu problemas.',
       guildCount: 500,
       commands: [
         {
@@ -102,9 +122,9 @@ export async function GET(request: NextRequest) {
         }
       ],
       features: [
-        'Sistema de música',
-        'Moderação',
-        'Entretenimento'
+        "Desenvolvimento constante",
+        "Velocidade extrema",
+        "Funcionalidades completas"
       ]
     });
   }
