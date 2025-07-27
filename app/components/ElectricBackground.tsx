@@ -2,103 +2,147 @@
 
 import { useEffect, useRef } from "react";
 
-interface EnergyMatrix {
-  x: number;
-  y: number;
-  gridSize: number;
-  rotation: number;
-  pulsePhase: number;
-  energy: number;
-  time: number;
-}
+interface Spark { x: number; y: number; vx: number; vy: number; life: number; maxLife: number; }
 
-export default function ElectricBackground() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const matrices: EnergyMatrix[] = [];
+interface MicroRay { x1: number; y1: number; x2: number; y2: number; alpha: number; life: number; maxLife: number; }
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+interface EnergyMatrix { x: number; y: number; time: number; pulsePhase: number; gridSize: number; }
 
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+export default function ElectricBackground() { const canvasRef = useRef<HTMLCanvasElement>(null); const animationId = useRef<number | null>(null); const sparks = useRef<Spark[]>([]); const rays = useRef<MicroRay[]>([]); const matrices = useRef<EnergyMatrix[]>([]); const lastMatrixTime = useRef<number>(0);
 
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = window.innerWidth * dpr;
-    canvas.height = window.innerHeight * dpr;
-    canvas.style.width = window.innerWidth + "px";
-    canvas.style.height = window.innerHeight + "px";
-    ctx.scale(dpr, dpr);
+useEffect(() => { const canvas = canvasRef.current; if (!canvas) return;
 
-    const matrixCount = Math.min(10, 10); // Máximo de 10 matrizes
+const ctx = canvas.getContext("2d");
+if (!ctx) return;
 
-    for (let i = 0; i < matrixCount; i++) {
-      matrices.push({
-        x: Math.random() * window.innerWidth,
-        y: Math.random() * window.innerHeight,
-        gridSize: 50 + Math.random() * 30,
-        rotation: Math.random() * Math.PI * 2,
-        pulsePhase: Math.random() * Math.PI * 2,
-        energy: Math.random() * 100,
-        time: 0,
-      });
+let width = canvas.width = window.innerWidth;
+let height = canvas.height = window.innerHeight;
+
+const generateSpark = (x: number, y: number) => {
+  sparks.current.push({
+    x,
+    y,
+    vx: (Math.random() - 0.5) * 2,
+    vy: (Math.random() - 0.5) * 2,
+    life: 0,
+    maxLife: 60 + Math.random() * 60,
+  });
+};
+
+const generateRay = (x1: number, y1: number, x2: number, y2: number) => {
+  rays.current.push({
+    x1,
+    y1,
+    x2,
+    y2,
+    alpha: 1,
+    life: 0,
+    maxLife: 20 + Math.random() * 20,
+  });
+};
+
+const generateMatrix = (x: number, y: number) => {
+  if (matrices.current.length >= 10) return;
+
+  matrices.current.push({
+    x,
+    y,
+    time: 0,
+    pulsePhase: Math.random() * Math.PI * 2,
+    gridSize: 25 + Math.random() * 15,
+  });
+};
+
+const drawMatrix = (matrix: EnergyMatrix) => {
+  if (!ctx) return;
+
+  const radius = matrix.gridSize * (0.8 + 0.3 * Math.sin(matrix.pulsePhase + matrix.time));
+  ctx.beginPath();
+  ctx.arc(matrix.x, matrix.y, radius, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(0, 200, 255, 0.15)";
+  ctx.fill();
+};
+
+const animate = () => {
+  if (!ctx) return;
+  ctx.clearRect(0, 0, width, height);
+
+  const now = Date.now();
+  if (now - lastMatrixTime.current > 1000 + Math.random() * 1000 && matrices.current.length < 10) {
+    const x = Math.random() * width;
+    const y = Math.random() * height;
+    generateMatrix(x, y);
+    lastMatrixTime.current = now;
+  }
+
+  for (const matrix of matrices.current) {
+    matrix.time += 0.05;
+    drawMatrix(matrix);
+  }
+
+  for (let i = sparks.current.length - 1; i >= 0; i--) {
+    const s = sparks.current[i];
+    s.x += s.vx;
+    s.y += s.vy;
+    s.life++;
+
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, 1.5, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(0, 150, 255, ${1 - s.life / s.maxLife})`;
+    ctx.fill();
+
+    if (Math.random() < 0.02) {
+      const nearby = sparks.current.filter(
+        other => other !== s && Math.hypot(other.x - s.x, other.y - s.y) < 50
+      );
+      const target = nearby[Math.floor(Math.random() * nearby.length)];
+      if (target) generateRay(s.x, s.y, target.x, target.y);
     }
 
-    function drawMatrix(matrix: EnergyMatrix) {
-      const radius =
-        matrix.gridSize * (0.8 + 0.3 * Math.sin(matrix.pulsePhase + matrix.time));
-      ctx.beginPath();
-      ctx.arc(matrix.x, matrix.y, radius, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(0, 200, 255, 0.15)";
-      ctx.fill();
+    if (s.life >= s.maxLife) sparks.current.splice(i, 1);
+  }
 
-      for (let i = 0; i < 6; i++) {
-        const angle = (Math.PI * 2 * i) / 6 + matrix.rotation;
-        const length = radius + 20 * Math.sin(matrix.time + i);
-        const x2 = matrix.x + Math.cos(angle) * length;
-        const y2 = matrix.y + Math.sin(angle) * length;
-        ctx.beginPath();
-        ctx.moveTo(matrix.x, matrix.y);
-        ctx.lineTo(x2, y2);
-        ctx.strokeStyle = `rgba(0, 255, 255, ${0.2 + 0.2 * Math.sin(matrix.time + i)})`;
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-      }
-    }
+  for (let i = rays.current.length - 1; i >= 0; i--) {
+    const r = rays.current[i];
+    r.life++;
+    r.alpha = 1 - r.life / r.maxLife;
 
-    let animationFrameId: number;
-    function animate() {
-      if (document.hidden) {
-        animationFrameId = requestAnimationFrame(animate);
-        return;
-      }
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = `rgba(0, 255, 255, ${r.alpha})`;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(r.x1, r.y1);
+    ctx.lineTo(r.x2, r.y2);
+    ctx.stroke();
 
-      matrices.forEach((matrix) => {
-        matrix.time += 0.02;
-        matrix.pulsePhase += 0.015;
-        drawMatrix(matrix);
-      });
+    if (r.life >= r.maxLife) rays.current.splice(i, 1);
+  }
 
-      animationFrameId = requestAnimationFrame(animate);
-    }
+  animationId.current = requestAnimationFrame(animate);
+};
 
-    animate();
-    return () => cancelAnimationFrame(animationFrameId);
-  }, []);
+const handleMouseMove = (e: MouseEvent) => {
+  generateSpark(e.clientX, e.clientY);
+};
 
-  return (
-    <canvas
-      ref={canvasRef}
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100vw",
-        height: "100vh",
-        zIndex: -1,
-        pointerEvents: "none",
-      }}
-    />
-  );
-}
+const handleClick = (e: MouseEvent) => {
+  generateMatrix(e.clientX, e.clientY);
+};
+
+window.addEventListener("mousemove", handleMouseMove);
+window.addEventListener("click", handleClick);
+
+animate();
+
+return () => {
+  if (animationId.current !== null) cancelAnimationFrame(animationId.current);
+  window.removeEventListener("mousemove", handleMouseMove);
+  window.removeEventListener("click", handleClick);
+};
+
+}, []);
+
+return ( <canvas
+ref={canvasRef}
+className="fixed top-0 left-0 w-full h-full z-[-1] pointer-events-none"
+/> ); }
+
