@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from "next/image";
@@ -132,13 +131,13 @@ export default function Home() {
             <h3 className="text-lg font-semibold text-white mb-2">Ultra Rápido</h3>
             <p className="text-gray-300 text-sm">Respostas instantâneas para todos os comandos</p>
           </div>
-          
+
           <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 border border-purple-500/20 hover:border-purple-400/40 transition-all duration-300 hover:transform hover:scale-105">
             <div className="text-3xl mb-3">🎵</div>
             <h3 className="text-lg font-semibold text-white mb-2">Música</h3>
             <p className="text-gray-300 text-sm">Reproduz suas músicas favoritas com qualidade</p>
           </div>
-          
+
           <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300 hover:transform hover:scale-105">
             <div className="text-3xl mb-3">🛡️</div>
             <h3 className="text-lg font-semibold text-white mb-2">Moderação</h3>
@@ -154,7 +153,7 @@ export default function Home() {
           >
             🔗 Adicionar ao Discord
           </a>
-          
+
           <a
             href="#"
             className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-gray-900 font-bold py-4 px-8 rounded-full transition-all duration-300 transform hover:scale-105"
