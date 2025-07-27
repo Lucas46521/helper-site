@@ -19,10 +19,5 @@
   ],
   "env": {
     "NODE_ENV": "production"
-  },
-  "functions": {
-    "app/api/bot-info/route.ts": {
-      "maxDuration": 10
-    }
   }
 }
