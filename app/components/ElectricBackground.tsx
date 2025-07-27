@@ -1,205 +1,197 @@
-import { useEffect, useRef, useState } from "react";
+"use client";
 
-export default function ElectricBackground() {
+import { useEffect, useRef } from "react";
+
+interface Spark {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  life: number;
+  maxLife: number;
+}
+
+interface MicroRay {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  life: number;
+  maxLife: number;
+  opacity: number;
+}
+
+interface ElectricNode {
+  x: number;
+  y: number;
+  createdAt: number;
+  radius: number;
+}
+
+export default function MicroElectricBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isPressed, setIsPressed] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return; // Verifica se canvas não é null
+    if (!canvas) return;
     const ctx = canvas.getContext("2d");
-    if (!ctx) return; // Verifica se ctx não é null
+    if (!ctx) return;
 
-    let width = (canvas.width = window.innerWidth);
-    let height = (canvas.height = window.innerHeight);
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
 
-    const sparks: { x: number; y: number; vx: number; vy: number; life: number; hits: number }[] = [];
-    const nodes: { x: number; y: number; time: number; permanent: boolean }[] = [];
-    const discharges: { path: [number, number][]; time: number }[] = [];
+    const sparks: Spark[] = [];
+    const rays: MicroRay[] = [];
+    const nodes: ElectricNode[] = [];
 
-    function generateSpark(x: number, y: number) {
-      sparks.push({
+    const resize = () => {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+    };
+
+    window.addEventListener("resize", resize);
+
+    canvas.addEventListener("click", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      // Criar nó elétrico
+      nodes.push({
         x,
         y,
-        vx: Math.random() * 2 - 1,
-        vy: Math.random() * 2 - 1,
-        life: 30 + Math.random() * 70,
-        hits: 0,
+        createdAt: Date.now(),
+        radius: 100,
       });
-    }
 
-    function generateNode(x: number, y: number, autoRemove = true) {
-      const node = { x, y, time: 0, permanent: !autoRemove };
-      nodes.push(node);
-      if (autoRemove) {
-        setTimeout(() => {
-          const i = nodes.indexOf(node);
-          if (i !== -1) nodes.splice(i, 1);
-        }, 3000);
+      // Atrair faíscas próximas
+      for (const spark of sparks) {
+        const dx = spark.x - x;
+        const dy = spark.y - y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 80) {
+          const angle = Math.atan2(y - spark.y, x - spark.x);
+          spark.vx = Math.cos(angle) * 1.5;
+          spark.vy = Math.sin(angle) * 1.5;
+        }
       }
-    }
+    });
 
-    function createDischarge(from: { x: number; y: number }, to: { x: number; y: number }) {
-      discharges.push({
-        path: generateLightningPath(from.x, from.y, to.x, to.y),
-        time: 5,
-      });
-    }
-
-    function generateLightningPath(x1: number, y1: number, x2: number, y2: number) {
-      const path: [number, number][] = [];
-      const steps = 10;
-      for (let i = 0; i <= steps; i++) {
-        const t = i / steps;
-        const dx = x1 + (x2 - x1) * t + (Math.random() - 0.5) * 10;
-        const dy = y1 + (y2 - y1) * t + (Math.random() - 0.5) * 10;
-        path.push([dx, dy]);
-      }
-      return path;
-    }
-
-    function draw() {
-      ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
+    const draw = () => {
+      if (!ctx) return;
+      
+      ctx.fillStyle = "rgba(10, 15, 25, 0.12)";
       ctx.fillRect(0, 0, width, height);
 
-      if (Math.random() < 0.2) {
-        generateSpark(Math.random() * width, Math.random() * height);
+      const now = Date.now();
+
+      // Limpar nós após 3 segundos
+      for (let i = nodes.length - 1; i >= 0; i--) {
+        if (now - nodes[i].createdAt > 3000) nodes.splice(i, 1);
       }
 
-      sparks.forEach((s, i) => {
-        s.x += s.vx;
-        s.y += s.vy;
-        s.life--;
-
+      // Animação dos nós
+      for (const node of nodes) {
+        const pulse = Math.sin((now - node.createdAt) * 0.01) * 4 + 8;
         ctx.beginPath();
-        ctx.arc(s.x, s.y, 2, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 255, ${150 + Math.random() * 100}, 0.9)`;
-        ctx.shadowColor = "rgba(0,255,255,0.8)";
-        ctx.shadowBlur = 10;
-        ctx.fill();
-        ctx.shadowBlur = 0;
-
-        if (Math.random() < 0.01) {
-          const near = sparks.filter(s2 => s2 !== s && Math.hypot(s.x - s2.x, s.y - s2.y) < 100);
-          if (near.length) {
-            const count = Math.floor(Math.random() * 4);
-            for (let j = 0; j < count; j++) {
-              const target = near[Math.floor(Math.random() * near.length)];
-              createDischarge(s, target);
-              target.hits++;
-              if (target.hits >= 3) {
-                generateNode(target.x, target.y);
-                sparks.splice(sparks.indexOf(target), 1);
-              } else {
-                target.life += 30;
-              }
-            }
-          }
-        }
-
-        if (s.life <= 0) sparks.splice(i, 1);
-      });
-
-      discharges.forEach((d, i) => {
-        ctx.beginPath();
-        ctx.moveTo(d.path[0][0], d.path[0][1]);
-        for (let j = 1; j < d.path.length; j++) {
-          ctx.lineTo(d.path[j][0], d.path[j][1]);
-        }
-        ctx.strokeStyle = "rgba(0,255,255,0.7)";
+        ctx.arc(node.x, node.y, pulse, 0, Math.PI * 2);
+        ctx.strokeStyle = "rgba(120, 200, 255, 0.4)";
         ctx.lineWidth = 1;
         ctx.stroke();
+      }
 
-        d.time--;
-        if (d.time <= 0) discharges.splice(i, 1);
-      });
+      // Atualizar faíscas
+      for (let i = sparks.length - 1; i >= 0; i--) {
+        const s = sparks[i];
+        s.x += s.vx;
+        s.y += s.vy;
+        s.vx *= 0.96;
+        s.vy *= 0.96;
+        s.life--;
 
-      nodes.forEach(n => {
+        // Se estiver perto de um nó → lançar raio e remover faísca
+        for (const node of nodes) {
+          const dx = s.x - node.x;
+          const dy = s.y - node.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < node.radius * 0.9) {
+            rays.push({
+              x1: node.x,
+              y1: node.y,
+              x2: s.x,
+              y2: s.y,
+              life: 10,
+              maxLife: 10,
+              opacity: 0.5,
+            });
+            sparks.splice(i, 1);
+            break;
+          }
+        }
+
+        const alpha = s.life / s.maxLife;
+        ctx.fillStyle = `rgba(100, 200, 255, ${alpha})`;
         ctx.beginPath();
-        ctx.arc(n.x, n.y, 10, 0, Math.PI * 2);
-        ctx.strokeStyle = "cyan";
-        ctx.lineWidth = 2;
-        ctx.shadowColor = "cyan";
-        ctx.shadowBlur = 20;
+        ctx.arc(s.x, s.y, 1.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (s.life <= 0) sparks.splice(i, 1);
+      }
+
+      // Atualizar micro raios
+      for (let i = rays.length - 1; i >= 0; i--) {
+        const r = rays[i];
+        r.life--;
+        const alpha = (r.life / r.maxLife) * r.opacity;
+
+        ctx.strokeStyle = `rgba(150, 220, 255, ${alpha})`;
+        ctx.lineWidth = 0.6;
+        ctx.shadowColor = `rgba(150, 220, 255, ${alpha})`;
+        ctx.shadowBlur = 4;
+
+        ctx.beginPath();
+        ctx.moveTo(r.x1, r.y1);
+        ctx.lineTo(r.x2, r.y2);
         ctx.stroke();
+
         ctx.shadowBlur = 0;
 
-        sparks.forEach((s, i) => {
-          const dist = Math.hypot(n.x - s.x, n.y - s.y);
-          if (dist < 80) {
-            s.vx += (n.x - s.x) * 0.02;
-            s.vy += (n.y - s.y) * 0.02;
-            if (dist < 10) sparks.splice(i, 1);
-          }
+        if (r.life <= 0) rays.splice(i, 1);
+      }
+
+      // Criar novas faíscas
+      if (Math.random() < 0.25) {
+        sparks.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          vx: (Math.random() - 0.5) * 0.5,
+          vy: (Math.random() - 0.5) * 0.5,
+          life: 40 + Math.random() * 40,
+          maxLife: 80,
         });
-      });
+      }
 
       requestAnimationFrame(draw);
-    }
-
-    const handleMouseMove = (e: MouseEvent) => {
-      for (let i = 0; i < 4; i++) {
-        generateSpark(e.clientX, e.clientY);
-      }
     };
-
-    const handleMouseDown = (e: MouseEvent) => {
-      generateNode(e.clientX, e.clientY, false);
-      setIsPressed(true);
-    };
-
-    const handleMouseUp = () => {
-      setIsPressed(false);
-    };
-
-    const handleResize = () => {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
-    };
-
-    canvas.addEventListener("mousemove", handleMouseMove);
-    canvas.addEventListener("mousedown", handleMouseDown);
-    canvas.addEventListener("mouseup", handleMouseUp);
-    window.addEventListener("resize", handleResize);
 
     draw();
 
     return () => {
-      canvas.removeEventListener("mousemove", handleMouseMove);
-      canvas.removeEventListener("mousedown", handleMouseDown);
-      canvas.removeEventListener("mouseup", handleMouseUp);
-      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("resize", resize);
+      canvas.removeEventListener("click", () => {});
     };
   }, []);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (!isPressed) return;
-      const { x, y } = lastMouse.current;
-      if (x !== null && y !== null) {
-        generateNode(x, y, false);
-      }
-    }, 200);
-    return () => clearInterval(interval);
-  }, [isPressed]);
-
-  const lastMouse = useRef({ x: null, y: null }).current;
 
   return (
     <canvas
       ref={canvasRef}
+      className="fixed inset-0 w-full h-full -z-10 pointer-events-none"
       style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100vw",
-        height: "100vh",
-        zIndex: -1,
-        background: "black",
-      }}
-      onMouseMove={(e) => {
-        lastMouse.x = e.clientX;
-        lastMouse.y = e.clientY;
+        background: "linear-gradient(135deg, #050f1a 0%, #0a1525 50%, #0f1b2e 100%)",
       }}
     />
   );
