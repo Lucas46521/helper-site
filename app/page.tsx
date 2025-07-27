@@ -16,7 +16,6 @@ interface BotInfo {
   guildCount: number;
   userCount: number;
   uptime: string;
-  fromDiscordAPI?: boolean;
   features: Array<{
     title: string;
     description: string;
@@ -66,27 +65,26 @@ export default function Home() {
         {/* Bot Avatar */}
         {botInfo && (
           <div className="mb-8 relative">
-            <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 p-1 animate-pulse">
-              {botInfo.avatar ? (
-                <img
-                  src={botInfo.avatar}
-                  alt={`${botInfo.username} avatar`}
-                  className="w-full h-full rounded-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full rounded-full bg-gray-800 flex items-center justify-center text-4xl md:text-5xl">
-                  🤖
-                </div>
-              )}
+            <div className="w-32 h-32 md:w-40 md:h-40 rounded-full relative">
+              {/* Pulsing ring around avatar */}
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 animate-pulse opacity-75"></div>
+              <div className="absolute inset-1 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500">
+                {botInfo.avatar ? (
+                  <img
+                    src={botInfo.avatar}
+                    alt={`${botInfo.username} avatar`}
+                    className="w-full h-full rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full rounded-full bg-gray-800 flex items-center justify-center text-4xl md:text-5xl">
+                    🤖
+                  </div>
+                )}
+              </div>
             </div>
             <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-400 rounded-full flex items-center justify-center">
               <div className="w-4 h-4 bg-green-500 rounded-full animate-ping"></div>
             </div>
-            {botInfo.fromDiscordAPI && (
-              <div className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
-                API
-              </div>
-            )}
           </div>
         )}
 

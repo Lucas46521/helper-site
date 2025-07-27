@@ -31,10 +31,15 @@ export async function GET() {
 
         if (response.ok) {
           discordBotInfo = await response.json();
+          console.log('Discord API data received:', discordBotInfo);
+        } else {
+          console.error('Discord API response not ok:', response.status, response.statusText);
         }
       } catch (discordError) {
-        console.warn('Failed to fetch from Discord API:', discordError);
+        console.error('Failed to fetch from Discord API:', discordError);
       }
+    } else {
+      console.warn('BOT_TOKEN or BOT_ID not available');
     }
 
     // Busca estatísticas do bot (guilds count) se possível
@@ -81,8 +86,7 @@ export async function GET() {
       
       // === METADADOS ===
       public: botData.public,
-      lastUpdated: new Date().toISOString(),
-      fromDiscordAPI: !!discordBotInfo
+      lastUpdated: new Date().toISOString()
     };
 
     return NextResponse.json(botInfo);
