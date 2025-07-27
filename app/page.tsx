@@ -1,9 +1,9 @@
-
 "use client";
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import botData from './bot-data.json';
+import ElectricBackground from './components/ElectricBackground';
 
 interface BotInfo {
   username: string;
@@ -19,80 +19,49 @@ interface BotInfo {
   commands: { name: string; description: string; usage: string; category: string }[];
 }
 
-interface Lightning {
-  id: number;
-  x: number;
-  y: number;
-  delay: number;
-  duration: number;
-  angle: number;
-  length: number;
-}
-
 export default function Home() {
-  const [lightnings, setLightnings] = useState<Lightning[]>([]);
   const [botInfo, setBotInfo] = useState<BotInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setBotInfo(botData);
-    setLoading(false);
+    const fetchBotInfo = async () => {
+      try {
+        // Buscar informações do Discord API
+        const response = await fetch('/api/bot-info?id=1015096771661279243');
 
-    // Generate random micro lightning bolts across entire page
-    const generateLightnings = () => {
-      const newLightnings: Lightning[] = [];
-      for (let i = 0; i < 35; i++) {
-        newLightnings.push({
-          id: i,
-          x: Math.random() * 100,
-          y: Math.random() * 100,
-          delay: Math.random() * 6,
-          duration: 0.8 + Math.random() * 1.5,
-          angle: Math.random() * 60 - 30, // -30 to 30 degrees
-          length: 20 + Math.random() * 40, // 20-60px length
-        });
+        if (response.ok) {
+          const discordData = await response.json();
+
+          // Combinar dados do Discord com dados locais
+          const combinedData = {
+            ...botData,
+            username: discordData.username || botData.username,
+            avatar: discordData.avatar || botData.avatar,
+            tag: discordData.tag || botData.tag,
+            verified: discordData.verified || botData.verified,
+            public: discordData.public || botData.public
+          };
+
+          setBotInfo(combinedData);
+        } else {
+          // Fallback para dados locais se a API falhar
+          setBotInfo(botData);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar dados do bot:', error);
+        setBotInfo(botData);
+      } finally {
+        setLoading(false);
       }
-      setLightnings(newLightnings);
     };
 
-    generateLightnings();
-    const interval = setInterval(generateLightnings, 4000);
-    return () => clearInterval(interval);
+    fetchBotInfo();
   }, []);
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 overflow-hidden">
-      {/* Enhanced Lightning Background across entire page */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        {lightnings.map((lightning) => (
-          <div
-            key={lightning.id}
-            className="absolute animate-lightning opacity-0"
-            style={{
-              left: `${lightning.x}%`,
-              top: `${lightning.y}%`,
-              animationDelay: `${lightning.delay}s`,
-              animationDuration: `${lightning.duration}s`,
-              transform: `rotate(${lightning.angle}deg)`,
-            }}
-          >
-            {/* Main lightning bolt */}
-            <div 
-              className="bg-gradient-to-b from-cyan-400 via-blue-400 to-transparent w-0.5"
-              style={{ height: `${lightning.length}px` }}
-            >
-              <div className="absolute inset-0 bg-white blur-sm opacity-70"></div>
-              <div className="absolute inset-0 bg-cyan-300 blur-xs opacity-50"></div>
-            </div>
-            
-            {/* Lightning glow effect */}
-            <div 
-              className="absolute top-0 left-1/2 transform -translate-x-1/2 bg-cyan-400 opacity-30 blur-md w-2"
-              style={{ height: `${lightning.length * 0.8}px` }}
-            ></div>
-          </div>
-        ))}
-      </div>
+      {/* Electric Background */}
+      <ElectricBackground />
 
       {/* Gradient Overlay */}
       <div className="absolute inset-0 bg-black bg-opacity-20 z-10"></div>
