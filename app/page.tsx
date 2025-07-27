@@ -170,7 +170,7 @@ export default function Home() {
               {loading ? '...' : botInfo?.guildCount ? `${botInfo.guildCount}+` : '500+'}
             </div>
             <div className="text-gray-400 text-sm">Servidores</div>
-          </div></div>
+          </div>
           <div>
             <div className="text-2xl font-bold text-blue-400">10K+</div>
             <div className="text-gray-400 text-sm">Usuários</div>
@@ -183,6 +183,7 @@ export default function Home() {
             <div className="text-2xl font-bold text-green-400">24/7</div>
             <div className="text-gray-400 text-sm">Online</div>
           </div>
+        </div>
         </div>
       </div>
     </div>
