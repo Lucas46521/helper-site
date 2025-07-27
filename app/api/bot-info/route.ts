@@ -14,8 +14,8 @@ interface DiscordBotInfo {
 
 export async function GET() {
   try {
-    const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
-    const BOT_ID = process.env.DISCORD_BOT_ID;
+    const BOT_TOKEN = process.env.BOT_TOKEN;
+    const BOT_ID = "1015096771661279243";
 
     let discordBotInfo: DiscordBotInfo | null = null;
 
