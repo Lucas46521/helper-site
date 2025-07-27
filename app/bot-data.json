@@ -1,3 +1,4 @@
+
 {
   "username": "MeuBot",
   "avatar": "",
@@ -38,6 +39,44 @@
       "icon": "🔔",
       "title": "Notificações",
       "description": "Sistema de alertas e notificações customizáveis"
+    }
+  ],
+  "commands": [
+    {
+      "name": "play",
+      "description": "Toca uma música no canal de voz",
+      "usage": "/play <música>",
+      "category": "Música"
+    },
+    {
+      "name": "ban",
+      "description": "Bane um usuário do servidor",
+      "usage": "/ban <usuário> [motivo]",
+      "category": "Moderação"
+    },
+    {
+      "name": "kick",
+      "description": "Expulsa um usuário do servidor",
+      "usage": "/kick <usuário> [motivo]",
+      "category": "Moderação"
+    },
+    {
+      "name": "coinflip",
+      "description": "Joga uma moeda",
+      "usage": "/coinflip",
+      "category": "Jogos"
+    },
+    {
+      "name": "balance",
+      "description": "Verifica seu saldo de moedas",
+      "usage": "/balance",
+      "category": "Economia"
+    },
+    {
+      "name": "help",
+      "description": "Mostra todos os comandos disponíveis",
+      "usage": "/help [comando]",
+      "category": "Utilidade"
     }
   ]
 }

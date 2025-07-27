@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server';
 import botData from '../../bot-data.json';
 
@@ -56,10 +57,9 @@ export async function GET() {
       }
     }
 
-    // Constrói a resposta final
+    // Constrói a resposta final organizando dados por fonte
     const botInfo = {
-      ...botData,
-      // Usa dados do Discord se disponível, caso contrário usa dados locais
+      // === INFORMAÇÕES DA API DO DISCORD ===
       username: discordBotInfo?.username || botData.username,
       avatar: discordBotInfo?.avatar 
         ? `https://cdn.discordapp.com/avatars/${discordBotInfo.id}/${discordBotInfo.avatar}.png?size=256`
@@ -68,9 +68,19 @@ export async function GET() {
         ? `${discordBotInfo.username}#${discordBotInfo.discriminator}`
         : botData.tag,
       verified: discordBotInfo?.verified_bot || botData.verified,
+      
+      // === INFORMAÇÕES DO ARQUIVO JSON ===
+      description: botData.description,
+      features: botData.features,
+      commands: botData.commands || [],
+      
+      // === STATS (MISTURADO: Discord API + JSON) ===
       guildCount: guildCount,
       userCount: Math.floor(Math.random() * 5000) + 15000, // Pode ser calculado de forma mais precisa
-      uptime: '99.9%',
+      uptime: botData.uptime,
+      
+      // === METADADOS ===
+      public: botData.public,
       lastUpdated: new Date().toISOString(),
       fromDiscordAPI: !!discordBotInfo
     };

@@ -33,6 +33,7 @@ interface BotInfo {
 export default function Home() {
   const [botInfo, setBotInfo] = useState<BotInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showCommands, setShowCommands] = useState(false);
 
   useEffect(() => {
     const fetchBotInfo = async () => {
@@ -81,6 +82,11 @@ export default function Home() {
             <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-400 rounded-full flex items-center justify-center">
               <div className="w-4 h-4 bg-green-500 rounded-full animate-ping"></div>
             </div>
+            {botInfo.fromDiscordAPI && (
+              <div className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                API
+              </div>
+            )}
           </div>
         )}
 
@@ -154,13 +160,39 @@ export default function Home() {
             🔗 Adicionar ao Discord
           </a>
 
-          <a
-            href="#"
+          <button
+            onClick={() => setShowCommands(!showCommands)}
             className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-gray-900 font-bold py-4 px-8 rounded-full transition-all duration-300 transform hover:scale-105"
           >
-            📚 Comandos
-          </a>
+            📚 {showCommands ? 'Ocultar' : 'Ver'} Comandos
+          </button>
         </div>
+
+        {/* Commands Section */}
+        {showCommands && botInfo?.commands && (
+          <div className="mt-12 max-w-4xl w-full">
+            <h2 className="text-3xl font-bold text-white mb-8">Comandos Disponíveis</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {botInfo.commands.map((command, index) => (
+                <div
+                  key={index}
+                  className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4 border border-cyan-500/20"
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-lg font-semibold text-cyan-400">/{command.name}</h3>
+                    <span className="text-xs bg-blue-500 text-white px-2 py-1 rounded">
+                      {command.category}
+                    </span>
+                  </div>
+                  <p className="text-gray-300 text-sm mb-2">{command.description}</p>
+                  <code className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded">
+                    {command.usage}
+                  </code>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );
