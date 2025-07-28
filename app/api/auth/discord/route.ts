@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 
 const CLIENT_ID = '1015096771661279243';
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
-const REDIRECT_URI = process.env.NEXT_PUBLIC_REDIRECT_URI || 'http://localhost:3000/api/auth/discord/callback';
+const REDIRECT_URI = 'http://localhost:3000/api/auth/discord/callback';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
