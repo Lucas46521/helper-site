@@ -19,7 +19,7 @@ interface Core {
   pulse: number;
   life: number;
   energy: number;
-  rotation: number; // Para o triângulo central
+  rotation: number;
 }
 
 interface Beam {
@@ -95,8 +95,8 @@ export default function EnergyBackground() {
       const segments = 6 + Math.floor(Math.random() * 3);
       for (let i = 0; i <= segments; i++) {
         const t = i / segments;
-        const x = fromX + (toX - fromX) * t + (Math.random() - 0.5) * 14; // Reduzido de 20 para 14 (30% menos)
-        const y = fromY + (toY - fromY) * t + (Math.random() - 0.5) * 14; // Reduzido de 20 para 14
+        const x = fromX + (toX - fromX) * t + (Math.random() - 0.5) * 14; // Velocidade reduzida em 30%
+        const y = fromY + (toY - fromY) * t + (Math.random() - 0.5) * 14;
         path.push({ x, y });
       }
       beams.push({ path, life: 10 });
@@ -140,7 +140,7 @@ export default function EnergyBackground() {
       for (let i = vortices.length - 1; i >= 0; i--) {
         const vortex = vortices[i];
         vortex.life--;
-        vortex.rotation += 0.025; // Reduzido de 0.05 para 0.025 (50% menos)
+        vortex.rotation += 0.025; // Velocidade de giro reduzida em 50%
 
         // Desenhar hexágono duplo
         ctx.beginPath();
@@ -178,7 +178,7 @@ export default function EnergyBackground() {
           ctx.fill();
         }
 
-        // Atração de partículas
+        // Atração e destruição de elementos próximos
         particles.forEach(p => {
           const dist = Math.hypot(p.x - vortex.x, p.y - vortex.y);
           if (dist < vortex.radius && dist > 0) {
@@ -187,6 +187,36 @@ export default function EnergyBackground() {
             p.speed += force;
             p.x += Math.cos(p.angle) * p.speed;
             p.y += Math.sin(p.angle) * p.speed;
+            // Destruição se muito próximo
+            if (dist < vortex.radius * 0.2) p.life = 0;
+          }
+        });
+
+        cores.forEach(c => {
+          const dist = Math.hypot(c.x - vortex.x, c.y - vortex.y);
+          if (dist < vortex.radius && dist > 0) {
+            // Atração suave (sem angle/speed)
+            const force = vortex.strength * (1 - dist / vortex.radius) * 0.5;
+            const dx = (vortex.x - c.x) / dist;
+            const dy = (vortex.y - c.y) / dist;
+            c.x += dx * force * 2;
+            c.y += dy * force * 2;
+            // Destruição se muito próximo
+            if (dist < vortex.radius * 0.2) c.life = 0;
+          }
+        });
+
+        matrices.forEach(m => {
+          const dist = Math.hypot(m.x - vortex.x, m.y - vortex.y);
+          if (dist < vortex.radius && dist > 0) {
+            // Atração suave
+            const force = vortex.strength * (1 - dist / vortex.radius) * 0.5;
+            const dx = (vortex.x - m.x) / dist;
+            const dy = (vortex.y - m.y) / dist;
+            m.x += dx * force * 2;
+            m.y += dy * force * 2;
+            // Destruição se muito próximo
+            if (dist < vortex.radius * 0.2) m.life = 0;
           }
         });
 
@@ -202,7 +232,7 @@ export default function EnergyBackground() {
       // Matrizes (raios girando conectados a um ponto)
       for (let i = matrices.length - 1; i >= 0; i--) {
         const matrix = matrices[i];
-        matrix.rotation += 0.025; // Reduzido de 0.05 para 0.025 (50% menos)
+        matrix.rotation += 0.025; // Velocidade de giro reduzida em 50%
         matrix.life--;
 
         // Desenhar ponto central
@@ -224,13 +254,15 @@ export default function EnergyBackground() {
           ctx.stroke();
         }
 
-        // Raios internos atingindo partículas e vórtices próximos
+        // Lançar até 3 feixes para partículas e vórtices próximos
         if (Math.random() < 0.1) {
           const targets = [
             ...particles.filter(p => Math.hypot(p.x - matrix.x, p.y - matrix.y) < 100),
             ...vortices.filter(v => Math.hypot(v.x - matrix.x, v.y - matrix.y) < 100),
           ];
-          if (targets.length > 0) {
+          // Lançar até 3 feixes
+          const numBeams = Math.min(targets.length, 3);
+          for (let j = 0; j < numBeams; j++) {
             const target = targets[Math.floor(Math.random() * targets.length)];
             spawnBeam(matrix.x, matrix.y, target.x, target.y);
           }
@@ -243,7 +275,7 @@ export default function EnergyBackground() {
       for (let i = cores.length - 1; i >= 0; i--) {
         const core = cores[i];
         core.pulse += 0.1;
-        core.rotation += 0.025; // Reduzido de 0.05 para 0.025 (50% menos)
+        core.rotation += 0.025; // Velocidade de giro reduzida em 50%
         core.life--;
         core.energy += 0.1;
 
@@ -293,11 +325,12 @@ export default function EnergyBackground() {
         ctx.beginPath();
         ctx.moveTo(beam.path[0].x, beam.path[0].y);
         for (const point of beam.path) ctx.lineTo(point.x, point.y);
-        ctx.strokeStyle = `rgba(0, 255, 255, ${beam.life / 10})`;
+        ctx.strokeStyle = `rgba(0,255},255, ${beam.life / 10})`;
         ctx.lineWidth = 1.2;
         ctx.stroke();
         beam.life--;
         if (beam.life <= 0) beams.splice(i, 1);
+        }
       }
 
       // Partículas
@@ -306,7 +339,7 @@ export default function EnergyBackground() {
         p.pulse += 0.1;
         p.angle += (Math.random() - 0.5) * 0.2;
         p.x += Math.cos(p.angle) * p.speed;
-        p.y += Math.sin(p.angle) * p.speed;
+        p.y += Math.sin(p.angle) * p.speed);
         p.life--;
 
         // Atração/repulsão entre partículas
@@ -330,10 +363,10 @@ export default function EnergyBackground() {
         // Desenhar partícula com piscar
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(0, 255, 255, ${Math.sin(p.pulse) * 0.5 + 0.5})`;
+        ctx.fillStyle = `rgba(0,255},255, ${Math.sin(p.pulse) * 0.5 + 0.5})`;
         ctx.fill();
 
-        // Transformação em feixe
+        // Transformação em feixe para elementos próximos
         if (Math.random() < 0.005) {
           const targets = [
             ...particles.filter(n => n !== p && Math.hypot(n.x - p.x, n.y - p.y) < 100),
@@ -342,7 +375,7 @@ export default function EnergyBackground() {
             ...vortices,
           ];
           if (targets.length > 0) {
-            const target = targets[Math.floor(Math.random() * targets.length)];
+            const target = targets[Math.floor(Math.random() * target.length)];
             spawnBeam(p.x, p.y, target.x, target.y);
           }
         }
@@ -351,51 +384,40 @@ export default function EnergyBackground() {
       }
 
       // Geração aleatória de elementos
-      if (Math.random() < 0.02) spawnParticle();
-      if (Math.random() < 0.02) spawnCore(Math.random() * width, Math.random() * height);
-      if (Math.random() < 0.02) spawnVortex(Math.random() * width, Math.random() * height);
+      if (Math.random() < 0.02) {
+        spawnParticle();
+        }
+      if (Math.random() < 0.02) {
+          spawnCore(Math.random() * width, Math.random() * height);
+        }
+      if (Math.random() < 0.02) {
+        spawnVortex(Math.random() * width, Math.random() * width);
+      }
 
       animationRef.current = requestAnimationFrame(animate);
-    }
 
-    const handleResize = () => {
-      width = window.innerWidth;
-      height = window.innerHeight;
-      canvas.width = width;
-      canvas.height = height;
-    };
+      return () => {
+        if (animationRef.current) cancelAnimationFrame(animation.current);
+        window.removeEventListener("resize", handleResize));
+        canvas.removeEventListener("click", handleClick);
+      }
+      );
+    }, []);
 
-    const handleClick = (e: MouseEvent) => {
-      const choice = Math.random();
-      if (choice < 0.33) spawnCore(e.clientX, e.clientY);
-      else if (choice < 0.66) spawnMatrix(e.clientX, e.clientY);
-      else spawnParticle(e.clientX, e.clientY);
-    };
+    );
 
-    window.addEventListener("resize", handleResize);
-    canvas.addEventListener("click", handleClick);
-
-    animate();
-
-    return () => {
-      if (animationRef.current) cancelAnimationFrame(animationRef.current);
-      window.removeEventListener("resize", handleResize);
-      canvas.removeEventListener("click", handleClick);
-    };
-  }, []);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        width: "100%",
-        height: "100%",
-        zIndex: -1,
-        background: "black",
-      }}
-    />
-  );
-}
+    return (
+      <canvas
+        ref={canvasRef}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          zIndex: -1,
+          background: "black",
+        }}
+      />
+    );
+  }
