@@ -73,6 +73,7 @@ export default function EnergyBackground() {
     }
 
     function animate() {
+      if (!ctx) return; // Garante que ctx não é null
       ctx.clearRect(0, 0, width, height);
 
       // Fundo gradiente
