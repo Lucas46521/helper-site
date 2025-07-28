@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import botData from '../../bot-data.json';
 
-const API_URL = 'http://gra-01.gratian.pro:3052/api/info';
-const API_TOKEN = 'hp-nmk45uimg';
+const API_URL = process.env.INT_API;
+const API_TOKEN = process.env.INT_API_TOKEN;
 
 export async function GET() {
   try {
