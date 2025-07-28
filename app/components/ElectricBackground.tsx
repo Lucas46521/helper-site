@@ -10,7 +10,7 @@ interface Particle {
   life: number;
   maxLife: number;
   radius: number;
-  pulse: number; // Para piscar
+  pulse: number;
 }
 
 interface Core {
@@ -24,7 +24,7 @@ interface Core {
 interface Beam {
   path: { x: number; y: number }[];
   life: number;
-  direction: { x: number; y: number }; // Para desvio por vórtices
+  direction: { x: number; y: number };
 }
 
 interface Matrix {
@@ -33,8 +33,7 @@ interface Matrix {
   radius: number;
   pulse: number;
   life: number;
-  speed: number;
-  angle: number;
+  rotation: number; // Para rotação dos raios
 }
 
 interface Vortex {
@@ -43,6 +42,7 @@ interface Vortex {
   radius: number;
   strength: number;
   life: number;
+  rotation: number; // Para pontos girando
 }
 
 export default function EnergyBackground() {
@@ -81,7 +81,7 @@ export default function EnergyBackground() {
         speed: 0.5 + Math.random(),
         life: 50 + Math.random() * 50,
         maxLife: 50 + Math.random() * 50,
-        radius: 3 + Math.random() * 3, // Partículas maiores
+        radius: 3 + Math.random() * 3,
         pulse: 0,
       });
     }
@@ -115,8 +115,7 @@ export default function EnergyBackground() {
         radius: 20 + Math.random() * 10,
         pulse: 0,
         life: 400,
-        speed: 1 + Math.random(),
-        angle: Math.random() * Math.PI * 2,
+        rotation: 0,
       });
     }
 
@@ -128,30 +127,57 @@ export default function EnergyBackground() {
         radius: 50 + Math.random() * 50,
         strength: 0.05 + Math.random() * 0.05,
         life: 300,
+        rotation: 0,
       });
+    }
+
+    function drawHexagon(x: number, y: number, radius: number, rotation: number) {
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i + rotation;
+        const px = x + radius * Math.cos(angle);
+        const py = y + radius * Math.sin(angle);
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.strokeStyle = `rgba(0, 100, 255, 0.5)`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
     }
 
     function animate() {
       if (!ctx) return;
       ctx.clearRect(0, 0, width, height);
 
-      // Fundo gradiente
+      // Fundo gradiente (tons de azul escuro)
       const grad = ctx.createLinearGradient(0, 0, width, height);
-      grad.addColorStop(0, "#000015");
-      grad.addColorStop(1, "#000025");
+      grad.addColorStop(0, "#000022");
+      grad.addColorStop(1, "#000044");
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, width, height);
 
-      // Vórtices
+      // Vórtices (hexágono duplo com pontos girando)
       for (let i = vortices.length - 1; i >= 0; i--) {
         const vortex = vortices[i];
         vortex.life--;
+        vortex.rotation += 0.05;
 
-        ctx.beginPath();
-        ctx.arc(vortex.x, vortex.y, vortex.radius, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(255, 100, 255, ${vortex.life / 300})`;
-        ctx.lineWidth = 1;
-        ctx.stroke();
+        // Hexágono externo
+        drawHexagon(vortex.x, vortex.y, vortex.radius, vortex.rotation);
+        // Hexágono interno
+        drawHexagon(vortex.x, vortex.y, vortex.radius * 0.6, -vortex.rotation);
+
+        // Pontos girando ao redor
+        for (let j = 0; j < 6; j++) {
+          const angle = (Math.PI / 3) * j + vortex.rotation;
+          const px = vortex.x + vortex.radius * 0.8 * Math.cos(angle);
+          const py = vortex.y + vortex.radius * 0.8 * Math.sin(angle);
+          ctx.beginPath();
+          ctx.arc(px, py, 2, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(0, 150, 255, ${vortex.life / 300})`;
+          ctx.fill();
+        }
 
         // Atração de partículas
         particles.forEach(p => {
@@ -180,25 +206,31 @@ export default function EnergyBackground() {
         if (vortex.life <= 0) vortices.splice(i, 1);
       }
 
-      // Matrizes (círculos com raios internos)
+      // Matrizes (raios girando em torno de um ponto)
       for (let i = matrices.length - 1; i >= 0; i--) {
         const matrix = matrices[i];
         matrix.pulse += 0.05;
         matrix.life--;
-        matrix.x += Math.cos(matrix.angle) * matrix.speed;
-        matrix.y += Math.sin(matrix.angle) * matrix.speed;
+        matrix.rotation += 0.1;
 
-        // Desenhar círculo
+        // Ponto central
         ctx.beginPath();
-        ctx.arc(
-          matrix.x,
-          matrix.y,
-          matrix.radius + Math.sin(matrix.pulse) * 5,
-          0,
-          Math.PI * 2
-        );
-        ctx.fillStyle = `rgba(100, 255, 100, ${matrix.life / 400})`;
+        ctx.arc(matrix.x, matrix.y, 5, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0, 150, 255, ${matrix.life / 400})`;
         ctx.fill();
+
+        // Raios girando
+        for (let j = 0; j < 6; j++) {
+          const angle = (Math.PI / 3) * j + matrix.rotation;
+          const endX = matrix.x + matrix.radius * Math.cos(angle);
+          const endY = matrix.y + matrix.radius * Math.sin(angle);
+          ctx.beginPath();
+          ctx.moveTo(matrix.x, matrix.y);
+          ctx.lineTo(endX, endY);
+          ctx.strokeStyle = `rgba(0, 100, 255, ${matrix.life / 400})`;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
 
         // Raios internos atingindo partículas e vórtices
         if (Math.random() < 0.1) {
@@ -210,13 +242,6 @@ export default function EnergyBackground() {
             const target = targets[Math.floor(Math.random() * targets.length)];
             spawnBeam(matrix.x, matrix.y, target.x, target.y);
           }
-        }
-
-        // Colisão com partículas (já incluído na lógica de partículas)
-
-        // Reposicionar se sair da tela
-        if (matrix.x < 0 || matrix.x > width || matrix.y < 0 || matrix.y > height) {
-          matrix.angle = Math.random() * Math.PI * 2;
         }
 
         if (matrix.life <= 0) matrices.splice(i, 1);
@@ -232,10 +257,10 @@ export default function EnergyBackground() {
         const radius = 15 + 5 * Math.sin(core.pulse);
         ctx.beginPath();
         ctx.arc(core.x, core.y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(0, 255, 255, 0.1)`;
-        ctx.fill();
-        ctx.strokeStyle = `rgba(0, 200, 255, 0.3)`;
+        ctx.fillStyle = `rgba(0, 150, 255, 0.1)`;
+        ctx.strokeStyle = `rgba(0, 100, 255, 0.3)`;
         ctx.lineWidth = 1.2;
+        ctx.fill();
         ctx.stroke();
 
         // Divisão do núcleo
@@ -261,17 +286,17 @@ export default function EnergyBackground() {
         ctx.beginPath();
         ctx.moveTo(beam.path[0].x, beam.path[0].y);
         for (const point of beam.path) ctx.lineTo(point.x, point.y);
-        ctx.strokeStyle = `rgba(0, 255, 255, ${beam.life / 10})`;
+        ctx.strokeStyle = `rgba(0, 200, 255, ${beam.life / 10})`;
         ctx.lineWidth = 1.2;
         ctx.stroke();
         beam.life--;
         if (beam.life <= 0) beams.splice(i, 1);
       }
 
-      // Partículas
+      // Partículas (faíscas)
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
-        p.pulse += 0.1; // Para piscar
+        p.pulse += 0.1;
         p.angle += (Math.random() - 0.5) * 0.2;
         p.x += Math.cos(p.angle) * p.speed;
         p.y += Math.sin(p.angle) * p.speed;
@@ -282,7 +307,7 @@ export default function EnergyBackground() {
           if (other !== p) {
             const dist = Math.hypot(p.x - other.x, p.y - other.y);
             if (dist < 50 && dist > 0) {
-              const force = 0.02 * (Math.random() < 0.5 ? 1 : -1); // Atração ou repulsão
+              const force = 0.02 * (Math.random() < 0.5 ? 1 : -1);
               p.angle = Math.atan2(other.y - p.y, other.x - p.x);
               p.speed += force;
               // Colisão para formar matriz
@@ -295,10 +320,10 @@ export default function EnergyBackground() {
           }
         });
 
-        // Desenhar partícula com piscar
+        // Desenhar partícula (ponto piscante)
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(0, 255, 255, ${Math.sin(p.pulse) * 0.5 + 0.5})`;
+        ctx.fillStyle = `rgba(0, 200, 255, ${Math.sin(p.pulse) * 0.5 + 0.5})`;
         ctx.fill();
 
         // Transformação em feixe
