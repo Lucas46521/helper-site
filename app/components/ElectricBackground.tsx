@@ -72,14 +72,14 @@ export default function EnergyBackground() {
     spawnParticle(width * 0.75, height * 0.75);
 
     function spawnParticle(x?: number, y?: number) {
-      if (particles.length >= 20) return;
+      if (particles.length >= 50) return; // Limite aumentado para 50
       particles.push({
         x: x ?? Math.random() * width,
         y: y ?? Math.random() * height,
         angle: Math.random() * Math.PI * 2,
         speed: 0.5 + Math.random(),
-        life: 50 + Math.random() * 50,
-        maxLife: 50 + Math.random() * 50,
+        life: 60 + Math.random() * 60, // 1 a 2 segundos (60-120 frames)
+        maxLife: 60 + Math.random() * 60,
         radius: 3 + Math.random() * 3,
         pulse: 0,
       });
@@ -95,7 +95,7 @@ export default function EnergyBackground() {
       const segments = 6 + Math.floor(Math.random() * 3);
       for (let i = 0; i <= segments; i++) {
         const t = i / segments;
-        const x = fromX + (toX - fromX) * t + (Math.random() - 0.5) * 14;
+        const x = fromX + (toX - fromX) * t + (Math.random() - 0.5) * 14; // Desvio reduzido em 30%
         const y = fromY + (toY - fromY) * t + (Math.random() - 0.5) * 14;
         path.push({ x, y });
       }
@@ -119,7 +119,7 @@ export default function EnergyBackground() {
         x,
         y,
         radius: 50,
-        strength: 0.05 + Math.random() * 0.05,
+        strength: 0.075 + Math.random() * 0.075, // Força aumentada em 50%
         life: 300,
         rotation: 0,
       });
@@ -188,7 +188,7 @@ export default function EnergyBackground() {
             p.x += Math.cos(p.angle) * p.speed;
             p.y += Math.sin(p.angle) * p.speed;
             // Destruição se muito próximo
-            if (dist < vortex.radius * 0.2) p.life = 0;
+            if (dist < vortex.radius * 0.3) p.life = 0; // Limiar aumentado para 30%
           }
         });
 
@@ -201,7 +201,7 @@ export default function EnergyBackground() {
             c.x += dx * force * 2;
             c.y += dy * force * 2;
             // Destruição se muito próximo
-            if (dist < vortex.radius * 0.2) c.life = 0;
+            if (dist < vortex.radius * 0.3) c.life = 0;
           }
         });
 
@@ -214,7 +214,7 @@ export default function EnergyBackground() {
             m.x += dx * force * 2;
             m.y += dy * force * 2;
             // Destruição se muito próximo
-            if (dist < vortex.radius * 0.2) m.life = 0;
+            if (dist < vortex.radius * 0.3) m.life = 0;
           }
         });
 
@@ -253,7 +253,7 @@ export default function EnergyBackground() {
         }
 
         // Lançar até 3 feixes para partículas e vórtices próximos
-        if (Math.random() < 0.1) {
+        if (Math.random() < 0.2) { // Chance aumentada para 20%
           const targets = [
             ...particles.filter(p => Math.hypot(p.x - matrix.x, p.y - matrix.y) < 100),
             ...vortices.filter(v => Math.hypot(v.x - matrix.x, v.y - matrix.y) < 100),
@@ -305,7 +305,7 @@ export default function EnergyBackground() {
         }
 
         // Feixes para partículas próximas
-        if (Math.random() < 0.1) {
+        if (Math.random() < 0.2) { // Chance aumentada para 20%
           const close = particles.filter(p => Math.hypot(p.x - core.x, p.y - core.y) < 100);
           if (close.length > 0) {
             const target = close[Math.floor(Math.random() * close.length)];
@@ -363,7 +363,7 @@ export default function EnergyBackground() {
         ctx.fill();
 
         // Transformação em feixe
-        if (Math.random() < 0.005) {
+        if (Math.random() < 0.01) { // Chance aumentada para 1%
           const targets = [
             ...particles.filter(n => n !== p && Math.hypot(n.x - p.x, n.y - p.y) < 100),
             ...cores,
@@ -380,9 +380,9 @@ export default function EnergyBackground() {
       }
 
       // Geração aleatória de elementos
-      if (Math.random() < 0.02) spawnParticle();
-      if (Math.random() < 0.02) spawnCore(Math.random() * width, Math.random() * height);
-      if (Math.random() < 0.02) spawnVortex(Math.random() * width, Math.random() * height);
+      if (Math.random() < 0.05) spawnParticle(); // Chance aumentada para 5%
+      if (Math.random() < 0.005) spawnCore(Math.random() * width, Math.random() * height); // Chance reduzida para 0.5%
+      if (Math.random() < 0.005) spawnVortex(Math.random() * width, Math.random() * height); // Chance reduzida para 0.5%
 
       animationRef.current = requestAnimationFrame(animate);
     }
