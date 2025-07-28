@@ -11,11 +11,6 @@
   "uptime": "99.9%",
   "features": [
     {
-      "icon": "🎵",
-      "title": "Música",
-      "description": "Sistema de música avançado com playlists e controles intuitivos"
-    },
-    {
       "icon": "🛡️",
       "title": "Moderação",
       "description": "Ferramentas completas de moderação para manter seu servidor seguro"
@@ -28,17 +23,12 @@
     {
       "icon": "⚙️",
       "title": "Configurável",
-      "description": "Personalize comandos e funcionalidades conforme suas necessidades"
+      "description": "Personalize as funcionalidades conforme suas necessidades"
     },
     {
       "icon": "📊",
       "title": "Analytics",
       "description": "Estatísticas detalhadas do seu servidor e atividade dos membros"
-    },
-    {
-      "icon": "🔔",
-      "title": "Notificações",
-      "description": "Sistema de alertas e notificações customizáveis"
     }
   ],
   "commands": [
