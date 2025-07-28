@@ -19,6 +19,7 @@ interface Core {
   pulse: number;
   life: number;
   energy: number;
+  rotation: number; // Para o triângulo central
 }
 
 interface Beam {
@@ -86,7 +87,7 @@ export default function EnergyBackground() {
 
     function spawnCore(x: number, y: number) {
       if (cores.length >= 8) return;
-      cores.push({ x, y, pulse: 0, life: 600, energy: 0 });
+      cores.push({ x, y, pulse: 0, life: 600, energy: 0, rotation: 0 });
     }
 
     function spawnBeam(fromX: number, fromY: number, toX: number, toY: number) {
@@ -94,8 +95,8 @@ export default function EnergyBackground() {
       const segments = 6 + Math.floor(Math.random() * 3);
       for (let i = 0; i <= segments; i++) {
         const t = i / segments;
-        const x = fromX + (toX - fromX) * t + (Math.random() - 0.5) * 20;
-        const y = fromY + (toY - fromY) * t + (Math.random() - 0.5) * 20;
+        const x = fromX + (toX - fromX) * t + (Math.random() - 0.5) * 14; // Reduzido de 20 para 14 (30% menos)
+        const y = fromY + (toY - fromY) * t + (Math.random() - 0.5) * 14; // Reduzido de 20 para 14
         path.push({ x, y });
       }
       beams.push({ path, life: 10 });
@@ -139,7 +140,7 @@ export default function EnergyBackground() {
       for (let i = vortices.length - 1; i >= 0; i--) {
         const vortex = vortices[i];
         vortex.life--;
-        vortex.rotation += 0.05;
+        vortex.rotation += 0.025; // Reduzido de 0.05 para 0.025 (50% menos)
 
         // Desenhar hexágono duplo
         ctx.beginPath();
@@ -177,7 +178,7 @@ export default function EnergyBackground() {
           ctx.fill();
         }
 
-        // Atração de partículas (apenas Particle tem angle e speed)
+        // Atração de partículas
         particles.forEach(p => {
           const dist = Math.hypot(p.x - vortex.x, p.y - vortex.y);
           if (dist < vortex.radius && dist > 0) {
@@ -201,7 +202,7 @@ export default function EnergyBackground() {
       // Matrizes (raios girando conectados a um ponto)
       for (let i = matrices.length - 1; i >= 0; i--) {
         const matrix = matrices[i];
-        matrix.rotation += 0.05;
+        matrix.rotation += 0.025; // Reduzido de 0.05 para 0.025 (50% menos)
         matrix.life--;
 
         // Desenhar ponto central
@@ -238,13 +239,15 @@ export default function EnergyBackground() {
         if (matrix.life <= 0) matrices.splice(i, 1);
       }
 
-      // Núcleos
+      // Núcleos (círculo com triângulo central rotativo)
       for (let i = cores.length - 1; i >= 0; i--) {
         const core = cores[i];
         core.pulse += 0.1;
+        core.rotation += 0.025; // Reduzido de 0.05 para 0.025 (50% menos)
         core.life--;
         core.energy += 0.1;
 
+        // Desenhar círculo
         const radius = 15 + 5 * Math.sin(core.pulse);
         ctx.beginPath();
         ctx.arc(core.x, core.y, radius, 0, Math.PI * 2);
@@ -254,12 +257,25 @@ export default function EnergyBackground() {
         ctx.lineWidth = 1.2;
         ctx.stroke();
 
+        // Desenhar triângulo central
+        ctx.beginPath();
+        for (let j = 0; j < 3; j++) {
+          const angle = (j / 3) * Math.PI * 2 + core.rotation;
+          const x = core.x + Math.cos(angle) * (radius * 0.5);
+          const y = core.y + Math.sin(angle) * (radius * 0.5);
+          ctx[j === 0 ? "moveTo" : "lineTo"](x, y);
+        }
+        ctx.closePath();
+        ctx.fillStyle = `rgba(0, 200, 255, ${core.life / 600})`;
+        ctx.fill();
+
         // Divisão do núcleo
         if (core.energy > 100 && Math.random() < 0.02) {
           spawnCore(core.x + (Math.random() - 0.5) * 50, core.y + (Math.random() - 0.5) * 50);
           core.energy = 0;
         }
 
+        // Feixes para partículas próximas
         if (Math.random() < 0.1) {
           const close = particles.filter(p => Math.hypot(p.x - core.x, p.y - core.y) < 100);
           if (close.length > 0) {
