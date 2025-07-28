@@ -72,18 +72,19 @@ export default function EnergyBackground() {
     spawnParticle(width * 0.75, height * 0.75);
 
     function spawnParticle(x?: number, y?: number) {
-      if (particles.length >= 50) return;
-      particles.push({
-        x: x ?? Math.random() * width,
-        y: y ?? Math.random() * height,
-        angle: Math.random() * Math.PI * 2,
-        speed: 0.5 + Math.random(),
-        life: 60 + Math.random() * 60, // 1 a 2 segundos
-        maxLife: 60 + Math.random() * 60,
-        radius: 3 + Math.random() * 3,
-        pulse: 0,
-      });
-    }
+  if (particles.length >= 80) return;
+  const life = 180 + Math.random() * 180;
+  particles.push({
+    x: x ?? Math.random() * width,
+    y: y ?? Math.random() * height,
+    angle: Math.random() * Math.PI * 2,
+    speed: 0.3 + Math.random() * 0.4,
+    life,
+    maxLife: life,
+    radius: 3 + Math.random() * 3,
+    pulse: 0,
+  });
+}
 
     function spawnCore(x: number, y: number) {
       if (cores.length >= 8) return;
@@ -360,50 +361,54 @@ export default function EnergyBackground() {
 
       // Partículas
       for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-        p.pulse += 0.1;
-        p.angle += (Math.random() - 0.5) * 0.2;
-        p.x += Math.cos(p.angle) * p.speed;
-        p.y += Math.sin(p.angle) * p.speed;
-        p.life--;
+  const p = particles[i];
+  p.pulse += 0.1;
+  p.angle += (Math.random() - 0.5) * 0.2;
+  p.x += Math.cos(p.angle) * p.speed;
+  p.y += Math.sin(p.angle) * p.speed;
+  p.life--;
 
-        // Atração/repulsão entre partículas
-        particles.forEach(other => {
-          if (other !== p) {
-            const dist = Math.hypot(p.x - other.x, p.y - other.y);
-            if (dist < 50 && dist > 0) {
-              const force = 0.02 * (Math.random() < 0.5 ? 1 : -1);
-              p.angle = Math.atan2(other.y - p.y, other.x - p.x);
-              p.speed += force;
-              // Colisão para formar matriz
-              if (dist < p.radius + other.radius && Math.random() < 0.1) {
-                spawnMatrix(p.x, p.y);
-                p.life = 0;
-                other.life = 0;
-              }
-            }
-          }
-        });
-
-        // Desenhar partícula com piscar
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(0, 255, 255, ${Math.sin(p.pulse) * 0.5 + 0.5})`;
-        ctx.fill();
-
-        // Feixes apenas para outras partículas
-        if (Math.random() < 0.01) {
-          const targets = particles.filter(n => n !== p && Math.hypot(n.x - p.x, n.y - p.y) < 100);
-          if (targets.length > 0) {
-            const target = targets[Math.floor(Math.random() * targets.length)];
-            spawnBeam(p.x, p.y, target.x, target.y, true);
-          }
+  // Atração e interação com outras partículas
+  particles.forEach(other => {
+    if (other !== p) {
+      const dist = Math.hypot(p.x - other.x, p.y - other.y);
+      if (dist < 50 && dist > 0) {
+        const force = 0.02 * (Math.random() < 0.5 ? 1 : -1);
+        p.angle = Math.atan2(other.y - p.y, other.x - p.x);
+        p.speed += force;
+        if (dist < p.radius + other.radius && Math.random() < 0.1) {
+          spawnMatrix(p.x, p.y);
+          p.life = 0;
+          other.life = 0;
         }
-
-        if (p.life <= 0) particles.splice(i, 1);
       }
+    }
+  });
+
+  // Desenhar partícula como faísca suave
+  const alpha = Math.min(1, p.life / p.maxLife);
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+  ctx.fillStyle = `rgba(0, 255, 255, ${(Math.sin(p.pulse) * 0.5 + 0.5) * alpha})`;
+  ctx.fill();
+
+  // Feixes aleatórios para outras partículas
+  if (Math.random() < 0.01) {
+    const targets = particles.filter(n => n !== p && Math.hypot(n.x - p.x, n.y - p.y) < 100);
+    if (targets.length > 0) {
+      const target = targets[Math.floor(Math.random() * targets.length)];
+      spawnBeam(p.x, p.y, target.x, target.y, true);
+    }
+  }
+
+  if (p.life <= 0) {
+    p.radius -= 0.1;
+    if (p.radius <= 0.1) particles.splice(i, 1);
+  }
+}
 
       // Geração aleatória de elementos
+      if (particles.length < 80 && Math.random() < 0.15) spawnParticle();
       if (Math.random() < 0.05) spawnParticle();
       if (Math.random() < 0.005) spawnCore(Math.random() * width, Math.random() * height);
       if (Math.random() < 0.005) spawnVortex(Math.random() * width, Math.random() * height);
