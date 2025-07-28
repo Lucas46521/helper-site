@@ -17,7 +17,7 @@ interface Core {
   y: number;
   pulse: number;
   life: number;
-  energy: number; // Novo: acumula energia para divisão
+  energy: number;
 }
 
 interface Beam {
@@ -62,6 +62,11 @@ export default function EnergyBackground() {
     const matrices: Matrix[] = [];
     const vortices: Vortex[] = [];
 
+    // Inicializar alguns elementos para garantir que apareçam
+    spawnCore(width / 2, height / 2);
+    spawnMatrix(width / 4, height / 4);
+    spawnVortex((3 * width) / 4, (3 * height) / 4);
+
     function spawnParticle(x?: number, y?: number) {
       particles.push({
         x: x ?? Math.random() * width,
@@ -70,7 +75,7 @@ export default function EnergyBackground() {
         speed: 0.5 + Math.random(),
         life: 50 + Math.random() * 50,
         maxLife: 50 + Math.random() * 50,
-        radius: 1 + Math.random() * 1.5,
+        radius: 3 + Math.random() * 3, // Aumentado o tamanho das partículas
       });
     }
 
@@ -175,10 +180,9 @@ export default function EnergyBackground() {
           const dist = Math.hypot(p.x - matrix.x, p.y - matrix.y);
           if (dist < matrix.size) {
             if (Math.random() < 0.1) {
-              // Divisão: cria nova partícula
               spawnParticle(p.x, p.y);
             }
-            p.life = 0; // Remove partícula ao colidir
+            p.life = 0;
           }
         });
 
@@ -199,7 +203,7 @@ export default function EnergyBackground() {
         const core = cores[i];
         core.pulse += 0.1;
         core.life--;
-        core.energy += 0.1; // Acumula energia
+        core.energy += 0.1;
 
         const radius = 15 + 5 * Math.sin(core.pulse);
         ctx.beginPath();
@@ -265,7 +269,12 @@ export default function EnergyBackground() {
       }
 
       // Reduzir número de partículas
-      while (particles.length < 50) spawnParticle();
+      while (particles.length < 20) spawnParticle();
+
+      // Gerar novos elementos periodicamente
+      if (Math.random() < 0.01) spawnCore(Math.random() * width, Math.random() * height);
+      if (Math.random() < 0.01) spawnMatrix(Math.random() * width, Math.random() * height);
+      if (Math.random() < 0.01) spawnVortex(Math.random() * width, Math.random() * height);
 
       animationRef.current = requestAnimationFrame(animate);
     }
@@ -277,10 +286,6 @@ export default function EnergyBackground() {
       canvas.height = height;
     };
 
-    const handleMouseMove = (e: MouseEvent) => {
-      for (let i = 0; i < 2; i++) spawnParticle(e.clientX, e.clientY);
-    };
-
     const handleClick = (e: MouseEvent) => {
       spawnCore(e.clientX, e.clientY);
       if (Math.random() < 0.5) spawnMatrix(e.clientX, e.clientY);
@@ -288,7 +293,6 @@ export default function EnergyBackground() {
     };
 
     window.addEventListener("resize", handleResize);
-    canvas.addEventListener("mousemove", handleMouseMove);
     canvas.addEventListener("click", handleClick);
 
     animate();
@@ -296,7 +300,6 @@ export default function EnergyBackground() {
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
       window.removeEventListener("resize", handleResize);
-      canvas.removeEventListener("mousemove", handleMouseMove);
       canvas.removeEventListener("click", handleClick);
     };
   }, []);
