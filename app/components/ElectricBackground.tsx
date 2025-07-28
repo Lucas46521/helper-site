@@ -40,7 +40,7 @@ interface Vortex {
   radius: number;
   strength: number;
   life: number;
-  rotation: number; // Para pontos girando
+  rotation: number;
 }
 
 export default function EnergyBackground() {
@@ -177,16 +177,15 @@ export default function EnergyBackground() {
           ctx.fill();
         }
 
-        // Atração de tudo próximo
-        const elements = [...particles, ...cores, ...matrices];
-        elements.forEach(el => {
-          const dist = Math.hypot(el.x - vortex.x, el.y - vortex.y);
+        // Atração de partículas (apenas Particle tem angle e speed)
+        particles.forEach(p => {
+          const dist = Math.hypot(p.x - vortex.x, p.y - vortex.y);
           if (dist < vortex.radius && dist > 0) {
             const force = vortex.strength * (1 - dist / vortex.radius);
-            el.angle = Math.atan2(vortex.y - el.y, vortex.x - el.x);
-            el.speed = (el.speed || 0) + force;
-            el.x += Math.cos(el.angle) * (el.speed || 1);
-            el.y += Math.sin(el.angle) * (el.speed || 1);
+            p.angle = Math.atan2(vortex.y - p.y, vortex.x - p.x);
+            p.speed += force;
+            p.x += Math.cos(p.angle) * p.speed;
+            p.y += Math.sin(p.angle) * p.speed;
           }
         });
 
