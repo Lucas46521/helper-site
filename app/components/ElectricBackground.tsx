@@ -95,7 +95,7 @@ export default function EnergyBackground() {
       const segments = 6 + Math.floor(Math.random() * 3);
       for (let i = 0; i <= segments; i++) {
         const t = i / segments;
-        const x = fromX + (toX - fromX) * t + (Math.random() - 0.5) * 14; // Velocidade reduzida em 30%
+        const x = fromX + (toX - fromX) * t + (Math.random() - 0.5) * 14;
         const y = fromY + (toY - fromY) * t + (Math.random() - 0.5) * 14;
         path.push({ x, y });
       }
@@ -195,7 +195,6 @@ export default function EnergyBackground() {
         cores.forEach(c => {
           const dist = Math.hypot(c.x - vortex.x, c.y - vortex.y);
           if (dist < vortex.radius && dist > 0) {
-            // Atração suave (sem angle/speed)
             const force = vortex.strength * (1 - dist / vortex.radius) * 0.5;
             const dx = (vortex.x - c.x) / dist;
             const dy = (vortex.y - c.y) / dist;
@@ -209,7 +208,6 @@ export default function EnergyBackground() {
         matrices.forEach(m => {
           const dist = Math.hypot(m.x - vortex.x, m.y - vortex.y);
           if (dist < vortex.radius && dist > 0) {
-            // Atração suave
             const force = vortex.strength * (1 - dist / vortex.radius) * 0.5;
             const dx = (vortex.x - m.x) / dist;
             const dy = (vortex.y - m.y) / dist;
@@ -260,7 +258,6 @@ export default function EnergyBackground() {
             ...particles.filter(p => Math.hypot(p.x - matrix.x, p.y - matrix.y) < 100),
             ...vortices.filter(v => Math.hypot(v.x - matrix.x, v.y - matrix.y) < 100),
           ];
-          // Lançar até 3 feixes
           const numBeams = Math.min(targets.length, 3);
           for (let j = 0; j < numBeams; j++) {
             const target = targets[Math.floor(Math.random() * targets.length)];
@@ -325,12 +322,11 @@ export default function EnergyBackground() {
         ctx.beginPath();
         ctx.moveTo(beam.path[0].x, beam.path[0].y);
         for (const point of beam.path) ctx.lineTo(point.x, point.y);
-        ctx.strokeStyle = `rgba(0,255},255, ${beam.life / 10})`;
+        ctx.strokeStyle = `rgba(0, 255, 255, ${beam.life / 10})`;
         ctx.lineWidth = 1.2;
         ctx.stroke();
         beam.life--;
         if (beam.life <= 0) beams.splice(i, 1);
-        }
       }
 
       // Partículas
@@ -339,7 +335,7 @@ export default function EnergyBackground() {
         p.pulse += 0.1;
         p.angle += (Math.random() - 0.5) * 0.2;
         p.x += Math.cos(p.angle) * p.speed;
-        p.y += Math.sin(p.angle) * p.speed);
+        p.y += Math.sin(p.angle) * p.speed;
         p.life--;
 
         // Atração/repulsão entre partículas
@@ -363,10 +359,10 @@ export default function EnergyBackground() {
         // Desenhar partícula com piscar
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(0,255},255, ${Math.sin(p.pulse) * 0.5 + 0.5})`;
+        ctx.fillStyle = `rgba(0, 255, 255, ${Math.sin(p.pulse) * 0.5 + 0.5})`;
         ctx.fill();
 
-        // Transformação em feixe para elementos próximos
+        // Transformação em feixe
         if (Math.random() < 0.005) {
           const targets = [
             ...particles.filter(n => n !== p && Math.hypot(n.x - p.x, n.y - p.y) < 100),
@@ -375,7 +371,7 @@ export default function EnergyBackground() {
             ...vortices,
           ];
           if (targets.length > 0) {
-            const target = targets[Math.floor(Math.random() * target.length)];
+            const target = targets[Math.floor(Math.random() * targets.length)];
             spawnBeam(p.x, p.y, target.x, target.y);
           }
         }
@@ -384,40 +380,51 @@ export default function EnergyBackground() {
       }
 
       // Geração aleatória de elementos
-      if (Math.random() < 0.02) {
-        spawnParticle();
-        }
-      if (Math.random() < 0.02) {
-          spawnCore(Math.random() * width, Math.random() * height);
-        }
-      if (Math.random() < 0.02) {
-        spawnVortex(Math.random() * width, Math.random() * width);
-      }
+      if (Math.random() < 0.02) spawnParticle();
+      if (Math.random() < 0.02) spawnCore(Math.random() * width, Math.random() * height);
+      if (Math.random() < 0.02) spawnVortex(Math.random() * width, Math.random() * height);
 
       animationRef.current = requestAnimationFrame(animate);
+    }
 
-      return () => {
-        if (animationRef.current) cancelAnimationFrame(animation.current);
-        window.removeEventListener("resize", handleResize));
-        canvas.removeEventListener("click", handleClick);
-      }
-      );
-    }, []);
+    const handleResize = () => {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+    };
 
-    );
+    const handleClick = (e: MouseEvent) => {
+      const choice = Math.random();
+      if (choice < 0.33) spawnCore(e.clientX, e.clientY);
+      else if (choice < 0.66) spawnMatrix(e.clientX, e.clientY);
+      else spawnParticle(e.clientX, e.clientY);
+    };
 
-    return (
-      <canvas
-        ref={canvasRef}
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          zIndex: -1,
-          background: "black",
-        }}
-      />
-    );
-  }
+    window.addEventListener("resize", handleResize);
+    canvas.addEventListener("click", handleClick);
+
+    animate();
+
+    return () => {
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+      window.removeEventListener("resize", handleResize);
+      canvas.removeEventListener("click", handleClick);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+        zIndex: -1,
+        background: "black",
+      }}
+    />
+  );
+}
