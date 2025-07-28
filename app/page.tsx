@@ -118,7 +118,7 @@ export default function Home() {
         <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           <div>
             <div className="text-2xl font-bold text-cyan-400">
-              {loading ? '...' : botInfo?.guildCount ? `${botInfo.guildCount}+` : '1500+'}
+              {loading ? '...' : botInfo?.guildCount ? `${botInfo.guildCount}` : '1500+'}
             </div>
             <div className="text-gray-400 text-sm">Servidores</div>
           </div>
