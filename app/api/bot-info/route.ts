@@ -6,6 +6,11 @@ const API_TOKEN = process.env.INT_API_TOKEN;
 
 export async function GET() {
   try {
+    if (!API_URL || !API_TOKEN) {
+      console.error('Variáveis de ambiente INT_API ou INT_API_TOKEN não definidas.');
+      return NextResponse.json({ error: 'Configuração da API incorreta' }, { status: 500 });
+    }
+
     const response = await fetch(API_URL, {
       method: 'GET',
       headers: {
@@ -20,18 +25,13 @@ export async function GET() {
 
     const externalBotInfo = await response.json();
 
-    // Mescla dados extras do botData local com dados externos da API
     const botInfo = {
       ...externalBotInfo,
-
-      // Dados adicionais do botData local que você quer incluir ou sobrescrever:
       description: botData.description,
       features: botData.features,
       commands: botData.commands || [],
       uptime: botData.uptime,
       public: botData.public,
-
-      // Atualiza timestamp de resposta
       lastUpdated: new Date().toISOString()
     };
 
@@ -42,5 +42,4 @@ export async function GET() {
   }
 }
 
-// Cache por 5 minutos
 export const revalidate = 300;
