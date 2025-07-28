@@ -18,7 +18,17 @@
     {
       "icon": "🎮",
       "title": "Jogos",
-      "description": "Mini-jogos divertidos e sistema de economia para engajar sua comunidade"
+      "description": "Mini-jogos divertidos e sistema de economia para divertir os seus membros"
+    },
+    {
+      "icon": "🪙",
+      "title": "Economia",
+      "description": "Um sistema de economia para engajar sua comunidade"
+    },
+    {
+      "icon": "⚒️",
+      "title": "Utilitários",
+      "description": "As mais diversas ferramentas para seu conforto e de seus usuários"
     },
     {
       "icon": "⚙️",
@@ -33,39 +43,33 @@
   ],
   "commands": [
     {
-      "name": "play",
-      "description": "Toca uma música no canal de voz",
-      "usage": "/play <música>",
-      "category": "Música"
-    },
-    {
       "name": "ban",
       "description": "Bane um usuário do servidor",
-      "usage": "/ban <usuário> [motivo]",
+      "usage": "!!ban <usuário> [motivo]",
       "category": "Moderação"
     },
     {
       "name": "kick",
       "description": "Expulsa um usuário do servidor",
-      "usage": "/kick <usuário> [motivo]",
+      "usage": "!!kick <usuário> [motivo]",
       "category": "Moderação"
     },
     {
       "name": "coinflip",
       "description": "Joga uma moeda",
-      "usage": "/coinflip",
+      "usage": "!!coinflip",
       "category": "Jogos"
     },
     {
       "name": "balance",
       "description": "Verifica seu saldo de moedas",
-      "usage": "/balance",
+      "usage": "!!balance",
       "category": "Economia"
     },
     {
       "name": "help",
-      "description": "Mostra todos os comandos disponíveis",
-      "usage": "/help [comando]",
+      "description": "Mostra um painel com todos os comandos disponíveis",
+      "usage": "!!help",
       "category": "Utilidade"
     }
   ]
