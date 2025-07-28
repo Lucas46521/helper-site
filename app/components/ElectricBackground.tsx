@@ -28,17 +28,11 @@ interface Beam {
 interface Matrix {
   x: number;
   y: number;
-  size: number;
+  radius: number;
   pulse: number;
   life: number;
-}
-
-interface Vortex {
-  x: number;
-  y: number;
-  radius: number;
-  strength: number;
-  life: number;
+  speed: number;
+  angle: number;
 }
 
 export default function EnergyBackground() {
@@ -60,14 +54,14 @@ export default function EnergyBackground() {
     const cores: Core[] = [];
     const beams: Beam[] = [];
     const matrices: Matrix[] = [];
-    const vortices: Vortex[] = [];
 
-    // Inicializar alguns elementos para garantir que apareçam
+    // Inicializar elementos
     spawnCore(width / 2, height / 2);
     spawnMatrix(width / 4, height / 4);
-    spawnVortex((3 * width) / 4, (3 * height) / 4);
+    spawnParticle(width * 0.75, height * 0.75);
 
     function spawnParticle(x?: number, y?: number) {
+      if (particles.length >= 20) return;
       particles.push({
         x: x ?? Math.random() * width,
         y: y ?? Math.random() * height,
@@ -75,7 +69,7 @@ export default function EnergyBackground() {
         speed: 0.5 + Math.random(),
         life: 50 + Math.random() * 50,
         maxLife: 50 + Math.random() * 50,
-        radius: 3 + Math.random() * 3, // Aumentado o tamanho das partículas
+        radius: 3 + Math.random() * 3, // Partículas maiores
       });
     }
 
@@ -101,20 +95,11 @@ export default function EnergyBackground() {
       matrices.push({
         x,
         y,
-        size: 30 + Math.random() * 20,
+        radius: 20 + Math.random() * 10,
         pulse: 0,
         life: 400,
-      });
-    }
-
-    function spawnVortex(x: number, y: number) {
-      if (vortices.length >= 3) return;
-      vortices.push({
-        x,
-        y,
-        radius: 50 + Math.random() * 50,
-        strength: 0.05 + Math.random() * 0.05,
-        life: 300,
+        speed: 1 + Math.random(),
+        angle: Math.random() * Math.PI * 2,
       });
     }
 
@@ -129,56 +114,39 @@ export default function EnergyBackground() {
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, width, height);
 
-      // Vórtices
-      for (let i = vortices.length - 1; i >= 0; i--) {
-        const vortex = vortices[i];
-        vortex.life--;
-
-        ctx.beginPath();
-        ctx.arc(vortex.x, vortex.y, vortex.radius, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(255, 100, 255, ${vortex.life / 300})`;
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        // Atração de partículas
-        particles.forEach(p => {
-          const dist = Math.hypot(p.x - vortex.x, p.y - vortex.y);
-          if (dist < vortex.radius && dist > 0) {
-            const force = vortex.strength * (1 - dist / vortex.radius);
-            p.angle = Math.atan2(vortex.y - p.y, vortex.x - p.x);
-            p.speed += force;
-          }
-        });
-
-        if (vortex.life <= 0) vortices.splice(i, 1);
-      }
-
-      // Matrizes de energia
+      // Matrizes (bolas de raios móveis)
       for (let i = matrices.length - 1; i >= 0; i--) {
         const matrix = matrices[i];
         matrix.pulse += 0.05;
         matrix.life--;
+        matrix.x += Math.cos(matrix.angle) * matrix.speed;
+        matrix.y += Math.sin(matrix.angle) * matrix.speed;
 
-        const gridSize = 10;
-        for (let dx = -matrix.size; dx <= matrix.size; dx += gridSize) {
-          for (let dy = -matrix.size; dy <= matrix.size; dy += gridSize) {
-            ctx.beginPath();
-            ctx.arc(
-              matrix.x + dx,
-              matrix.y + dy,
-              1 + Math.sin(matrix.pulse) * 2,
-              0,
-              Math.PI * 2
-            );
-            ctx.fillStyle = `rgba(100, 255, 100, ${matrix.life / 400})`;
-            ctx.fill();
+        // Desenhar esfera
+        ctx.beginPath();
+        ctx.arc(
+          matrix.x,
+          matrix.y,
+          matrix.radius + Math.sin(matrix.pulse) * 5,
+          0,
+          Math.PI * 2
+        );
+        ctx.fillStyle = `rgba(100, 255, 100, ${matrix.life / 400})`;
+        ctx.fill();
+
+        // Raios emitidos pela matriz
+        if (Math.random() < 0.1) {
+          const targets = [...cores, ...particles];
+          if (targets.length > 0) {
+            const target = targets[Math.floor(Math.random() * targets.length)];
+            spawnBeam(matrix.x, matrix.y, target.x, target.y);
           }
         }
 
         // Colisão com partículas
         particles.forEach(p => {
           const dist = Math.hypot(p.x - matrix.x, p.y - matrix.y);
-          if (dist < matrix.size) {
+          if (dist < matrix.radius + p.radius) {
             if (Math.random() < 0.1) {
               spawnParticle(p.x, p.y);
             }
@@ -186,13 +154,9 @@ export default function EnergyBackground() {
           }
         });
 
-        // Lançar feixes para núcleos ou vórtices
-        if (Math.random() < 0.05) {
-          const targets = [...cores, ...vortices];
-          if (targets.length > 0) {
-            const target = targets[Math.floor(Math.random() * targets.length)];
-            spawnBeam(matrix.x, matrix.y, target.x, target.y);
-          }
+        // Reposicionar se sair da tela
+        if (matrix.x < 0 || matrix.x > width || matrix.y < 0 || matrix.y > height) {
+          matrix.angle = Math.random() * Math.PI * 2;
         }
 
         if (matrix.life <= 0) matrices.splice(i, 1);
@@ -268,13 +232,10 @@ export default function EnergyBackground() {
         if (p.life <= 0) particles.splice(i, 1);
       }
 
-      // Reduzir número de partículas
-      while (particles.length < 20) spawnParticle();
-
-      // Gerar novos elementos periodicamente
-      if (Math.random() < 0.01) spawnCore(Math.random() * width, Math.random() * height);
-      if (Math.random() < 0.01) spawnMatrix(Math.random() * width, Math.random() * height);
-      if (Math.random() < 0.01) spawnVortex(Math.random() * width, Math.random() * height);
+      // Geração aleatória de elementos
+      if (Math.random() < 0.02) spawnParticle();
+      if (Math.random() < 0.02) spawnCore(Math.random() * width, Math.random() * height);
+      if (Math.random() < 0.02) spawnMatrix(Math.random() * width, Math.random() * height);
 
       animationRef.current = requestAnimationFrame(animate);
     }
@@ -287,9 +248,10 @@ export default function EnergyBackground() {
     };
 
     const handleClick = (e: MouseEvent) => {
-      spawnCore(e.clientX, e.clientY);
-      if (Math.random() < 0.5) spawnMatrix(e.clientX, e.clientY);
-      else spawnVortex(e.clientX, e.clientY);
+      const choice = Math.random();
+      if (choice < 0.33) spawnCore(e.clientX, e.clientY);
+      else if (choice < 0.66) spawnMatrix(e.clientX, e.clientY);
+      else spawnParticle(e.clientX, e.clientY);
     };
 
     window.addEventListener("resize", handleResize);
