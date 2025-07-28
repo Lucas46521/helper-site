@@ -96,12 +96,12 @@ export default function EnergyBackground() {
       const distance = Math.hypot(toX - fromX, toY - fromY);
       for (let i = 0; i <= segments; i++) {
         const t = i / segments;
-        const maxDeviation = Math.min(distance * 0.1, 50); // Desvio proporcional, limitado a 50
+        const maxDeviation = Math.min(distance * 0.1, 50);
         const x = fromX + (toX - fromX) * t + (Math.random() - 0.5) * maxDeviation;
         const y = fromY + (toY - fromY) * t + (Math.random() - 0.5) * maxDeviation;
         path.push({ x, y });
       }
-      beams.push({ path, life: 20 }); // Duração aumentada para 20 frames
+      beams.push({ path, life: 20 });
     }
 
     function spawnMatrix(x: number, y: number) {
@@ -128,20 +128,35 @@ export default function EnergyBackground() {
     }
 
     function drawBackground() {
-      // Gradiente radial
-      const grad = ctx!.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, Math.max(width, height) / 2);
-      grad.addColorStop(0, "#003366"); // Ciano no centro
-      grad.addColorStop(1, "#000015"); // Azul escuro nas bordas
-      ctx!.fillStyle = grad;
+      // Fundo preto
+      ctx!.fillStyle = "#000000";
       ctx!.fillRect(0, 0, width, height);
 
-      // Efeito de ruído (partículas de fundo)
-      for (let i = 0; i < 50; i++) {
+      // Grid futurista
+      ctx!.strokeStyle = "rgba(0, 200, 255, 0.1)";
+      ctx!.lineWidth = 1;
+      // Linhas verticais
+      for (let x = 0; x < width; x += 50) {
+        ctx!.beginPath();
+        ctx!.moveTo(x, 0);
+        ctx!.lineTo(x, height);
+        ctx!.stroke();
+      }
+      // Linhas horizontais
+      for (let y = 0; y < height; y += 50) {
+        ctx!.beginPath();
+        ctx!.moveTo(0, y);
+        ctx!.lineTo(width, y);
+        ctx!.stroke();
+      }
+
+      // Brilho pulsante
+      for (let i = 0; i < 10; i++) {
         const x = Math.random() * width;
         const y = Math.random() * height;
         ctx!.beginPath();
-        ctx!.arc(x, y, 1 + Math.random(), 0, Math.PI * 2);
-        ctx!.fillStyle = `rgba(0, 200, 255, ${Math.random() * 0.1})`;
+        ctx!.arc(x, y, 2 + Math.random(), 0, Math.PI * 2);
+        ctx!.fillStyle = `rgba(0, 255, 255, ${Math.sin(Date.now() * 0.001 + i) * 0.2 + 0.3})`;
         ctx!.fill();
       }
     }
@@ -239,201 +254,201 @@ export default function EnergyBackground() {
           }
           vortices.splice(i, 1);
         }
-        }
-
-        // Matrizes (raios girando conectados a um ponto)
-        for (let i = matrices.length - 1; i >= 0; i--) {
-          const matrix = matrices[i];
-          matrix.rotation += 0.025;
-          matrix.life--;
-
-          // Desenhar ponto central
-          ctx.beginPath();
-          ctx.arc(matrix.x, matrix.y, 5, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(0, 200, 255, ${matrix.life / 400})`;
-          ctx.fill();
-
-          // Raios girando
-          for (let j = 0; j < 8; j++) {
-            const angle = (j / 8) * Math.PI * 2 + matrix.rotation;
-            const x = matrix.x + Math.cos(angle) * matrix.radius;
-            const y = matrix.y + Math.sin(angle) * matrix.radius;
-            ctx.beginPath();
-            ctx.moveTo(matrix.x, matrix.y);
-            ctx.lineTo(x, y);
-            ctx.strokeStyle = `rgba(0, 150, 255, ${matrix.life / 400})`;
-            ctx.lineWidth = 1;
-            ctx.stroke();
-          }
-
-          // Lançar até 3 feixes para partículas e vórtices próximos
-          if (Math.random() < 0.2) {
-            const targets = [
-              ...particles.filter(p => Math.hypot(p.x - matrix.x, p.y - matrix.y) < 100),
-              ...vortices.filter(v => Math.hypot(v.x - matrix.x, v.y - matrix.y) < 100),
-            ];
-            const numBeams = Math.min(targets.length, 3);
-            for (let j = 0; j < numBeams; j++) {
-              const target = targets[Math.floor(Math.random() * targets.length)];
-              spawnBeam(matrix.x, matrix.y, target.x, target.y);
-            }
-          }
-
-          if (matrix.life <= 0) matrices.splice(i, 1);
-        }
-
-        // Núcleos (círculo com triângulo central rotativo)
-        for (let i = cores.length - 1; i >= 0; i--) {
-          const core = cores[i];
-          core.pulse += 0.1;
-          core.rotation += 0.025;
-          core.life--;
-          core.energy += 0.1;
-
-          // Desenhar círculo
-          const radius = 15 + 5 * Math.sin(core.pulse);
-          ctx.beginPath();
-          ctx.arc(core.x, core.y, radius, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(0, 255, 255, 0.1)`;
-          ctx.fill();
-          ctx.strokeStyle = `rgba(0, 200, 255, 0.3)`;
-          ctx.lineWidth = 1.2;
-          ctx.stroke();
-
-          // Desenhar triângulo central
-          ctx.beginPath();
-          for (let j = 0; j < 3; j++) {
-            const angle = (j / 3) * Math.PI * 2 + core.rotation;
-            const x = core.x + Math.cos(angle) * (radius * 0.5);
-            const y = core.y + Math.sin(angle) * (radius * 0.5);
-            ctx[j === 0 ? "moveTo" : "lineTo"](x, y);
-          }
-          ctx.closePath();
-          ctx.fillStyle = `rgba(0, 200, 255, ${core.life / 600})`;
-          ctx.fill();
-
-          // Divisão do núcleo
-          if (core.energy > 100 && Math.random() < 0.02) {
-            spawnCore(core.x + (Math.random() - 0.5) * 50, core.y + (Math.random() - 0.5) * 50);
-            core.energy = 0;
-          }
-
-          // Feixes para partículas próximas
-          if (Math.random() < 0.2) {
-            const close = particles.filter(p => Math.hypot(p.x - core.x, p.y - core.y) < 100);
-            if (close.length > 0) {
-              const target = close[Math.floor(Math.random() * close.length)];
-              spawnBeam(core.x, core.y, target.x, target.y);
-            }
-          }
-
-          if (core.life <= 0) cores.splice(i, 1);
-        }
-
-        // Feixes
-        for (let i = beams.length - 1; i >= 0; i--) {
-          const beam = beams[i];
-          ctx.beginPath();
-          ctx.moveTo(beam.path[0].x, beam.path[0].y);
-          for (const point of beam.path) ctx.lineTo(point.x, point.y);
-          ctx.strokeStyle = `rgba(0, 255, 255, ${beam.life / 20})`; // Ajustado para maior duração
-          ctx.lineWidth = 1.2;
-          ctx.stroke();
-          beam.life--;
-          if (beam.life <= 0) beams.splice(i, 1);
-        }
-
-        // Partículas
-        for (let i = particles.length - 1; i >= 0; i--) {
-          const p = particles[i];
-          p.pulse += 0.1;
-          p.angle += (Math.random() - 0.5) * 0.2;
-          p.x += Math.cos(p.angle) * p.speed;
-          p.y += Math.sin(p.angle) * p.speed;
-          p.life--;
-
-          // Atração/repulsão entre partículas
-          particles.forEach(other => {
-            if (other !== p) {
-              const dist = Math.hypot(p.x - other.x, p.y - other.y);
-              if (dist < 50 && dist > 0) {
-                const force = 0.02 * (Math.random() < 0.5 ? 1 : -1);
-                p.angle = Math.atan2(other.y - p.y, other.x - p.x);
-                p.speed += force;
-                // Colisão para formar matriz
-                if (dist < p.radius + other.radius && Math.random() < 0.1) {
-                  spawnMatrix(p.x, p.y);
-                  p.life = 0;
-                  other.life = 0;
-                }
-              }
-            }
-          });
-
-          // Desenhar partícula com piscar
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(0, 255, 255, ${Math.sin(p.pulse) * 0.5 + 0.5})`;
-          ctx.fill();
-
-          // Feixes apenas para outras partículas
-          if (Math.random() < 0.01) {
-            const targets = particles.filter(n => n !== p && Math.hypot(n.x - p.x, n.y - p.y) < 100);
-            if (targets.length > 0) {
-              const target = targets[Math.floor(Math.random() * targets.length)];
-              spawnBeam(p.x, p.y, target.x, target.y, true);
-            }
-          }
-
-          if (p.life <= 0) particles.splice(i, 1);
-        }
-
-        // Geração aleatória de elementos
-        if (Math.random() < 0.05) spawnParticle();
-        if (Math.random() < 0.005) spawnCore(Math.random() * width, Math.random() * height);
-        if (Math.random() < 0.005) spawnVortex(Math.random() * width, Math.random() * height);
-
-        animationRef.current = requestAnimationFrame(animate);
       }
 
-      const handleResize = () => {
-        width = window.innerWidth;
-        height = window.innerHeight;
-        canvas.width = width;
-        canvas.height = height;
-      };
+      // Matrizes (raios girando conectados a um ponto)
+      for (let i = matrices.length - 1; i >= 0; i--) {
+        const matrix = matrices[i];
+        matrix.rotation += 0.025;
+        matrix.life--;
 
-      const handleClick = (e: MouseEvent) => {
-        const choice = Math.random();
-        if (choice < 0.33) spawnCore(e.clientX, e.clientY);
-        else if (choice < 0.66) spawnMatrix(e.clientX, e.clientY);
-        else spawnParticle(e.clientX, e.clientY);
-      };
+        // Desenhar ponto central
+        ctx.beginPath();
+        ctx.arc(matrix.x, matrix.y, 5, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0, 200, 255, ${matrix.life / 400})`;
+        ctx.fill();
 
-      window.addEventListener("resize", handleResize);
-      canvas.addEventListener("click", handleClick);
+        // Raios girando
+        for (let j = 0; j < 8; j++) {
+          const angle = (j / 8) * Math.PI * 2 + matrix.rotation;
+          const x = matrix.x + Math.cos(angle) * matrix.radius;
+          const y = matrix.y + Math.sin(angle) * matrix.radius;
+          ctx.beginPath();
+          ctx.moveTo(matrix.x, matrix.y);
+          ctx.lineTo(x, y);
+          ctx.strokeStyle = `rgba(0, 150, 255, ${matrix.life / 400})`;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
 
-      animate();
+        // Lançar até 3 feixes para partículas e vórtices próximos
+        if (Math.random() < 0.2) {
+          const targets = [
+            ...particles.filter(p => Math.hypot(p.x - matrix.x, p.y - matrix.y) < 100),
+            ...vortices.filter(v => Math.hypot(v.x - matrix.x, v.y - matrix.y) < 100),
+          ];
+          const numBeams = Math.min(targets.length, 3);
+          for (let j = 0; j < numBeams; j++) {
+            const target = targets[Math.floor(Math.random() * targets.length)];
+            spawnBeam(matrix.x, matrix.y, target.x, target.y);
+          }
+        }
 
-      return () => {
-        if (animationRef.current) cancelAnimationFrame(animationRef.current);
-        window.removeEventListener("resize", handleResize);
-        canvas.removeEventListener("click", handleClick);
-      };
-    }, []);
+        if (matrix.life <= 0) matrices.splice(i, 1);
+      }
 
-    return (
-      <canvas
-        ref={canvasRef}
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          zIndex: -1,
-          background: "black",
-        }}
-      />
-    );
-  }
+      // Núcleos (círculo com triângulo central rotativo)
+      for (let i = cores.length - 1; i >= 0; i--) {
+        const core = cores[i];
+        core.pulse += 0.1;
+        core.rotation += 0.025;
+        core.life--;
+        core.energy += 0.1;
+
+        // Desenhar círculo
+        const radius = 15 + 5 * Math.sin(core.pulse);
+        ctx.beginPath();
+        ctx.arc(core.x, core.y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0, 255, 255, 0.1)`;
+        ctx.fill();
+        ctx.strokeStyle = `rgba(0, 200, 255, 0.3)`;
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+
+        // Desenhar triângulo central
+        ctx.beginPath();
+        for (let j = 0; j < 3; j++) {
+          const angle = (j / 3) * Math.PI * 2 + core.rotation;
+          const x = core.x + Math.cos(angle) * (radius * 0.5);
+          const y = core.y + Math.sin(angle) * (radius * 0.5);
+          ctx[j === 0 ? "moveTo" : "lineTo"](x, y);
+        }
+        ctx.closePath();
+        ctx.fillStyle = `rgba(0, 200, 255, ${core.life / 600})`;
+        ctx.fill();
+
+        // Divisão do núcleo
+        if (core.energy > 100 && Math.random() < 0.02) {
+          spawnCore(core.x + (Math.random() - 0.5) * 50, core.y + (Math.random() - 0.5) * 50);
+          core.energy = 0;
+        }
+
+        // Feixes para partículas próximas
+        if (Math.random() < 0.2) {
+          const close = particles.filter(p => Math.hypot(p.x - core.x, p.y - core.y) < 100);
+          if (close.length > 0) {
+            const target = close[Math.floor(Math.random() * close.length)];
+            spawnBeam(core.x, core.y, target.x, target.y);
+          }
+        }
+
+        if (core.life <= 0) cores.splice(i, 1);
+      }
+
+      // Feixes
+      for (let i = beams.length - 1; i >= 0; i--) {
+        const beam = beams[i];
+        ctx.beginPath();
+        ctx.moveTo(beam.path[0].x, beam.path[0].y);
+        for (const point of beam.path) ctx.lineTo(point.x, point.y);
+        ctx.strokeStyle = `rgba(0, 255, 255, ${beam.life / 20})`;
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+        beam.life--;
+        if (beam.life <= 0) beams.splice(i, 1);
+      }
+
+      // Partículas
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.pulse += 0.1;
+        p.angle += (Math.random() - 0.5) * 0.2;
+        p.x += Math.cos(p.angle) * p.speed;
+        p.y += Math.sin(p.angle) * p.speed;
+        p.life--;
+
+        // Atração/repulsão entre partículas
+        particles.forEach(other => {
+          if (other !== p) {
+            const dist = Math.hypot(p.x - other.x, p.y - other.y);
+            if (dist < 50 && dist > 0) {
+              const force = 0.02 * (Math.random() < 0.5 ? 1 : -1);
+              p.angle = Math.atan2(other.y - p.y, other.x - p.x);
+              p.speed += force;
+              // Colisão para formar matriz
+              if (dist < p.radius + other.radius && Math.random() < 0.1) {
+                spawnMatrix(p.x, p.y);
+                p.life = 0;
+                other.life = 0;
+              }
+            }
+          }
+        });
+
+        // Desenhar partícula com piscar
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0, 255, 255, ${Math.sin(p.pulse) * 0.5 + 0.5})`;
+        ctx.fill();
+
+        // Feixes apenas para outras partículas
+        if (Math.random() < 0.01) {
+          const targets = particles.filter(n => n !== p && Math.hypot(n.x - p.x, n.y - p.y) < 100);
+          if (targets.length > 0) {
+            const target = targets[Math.floor(Math.random() * targets.length)];
+            spawnBeam(p.x, p.y, target.x, target.y, true);
+          }
+        }
+
+        if (p.life <= 0) particles.splice(i, 1);
+      }
+
+      // Geração aleatória de elementos
+      if (Math.random() < 0.05) spawnParticle();
+      if (Math.random() < 0.005) spawnCore(Math.random() * width, Math.random() * height);
+      if (Math.random() < 0.005) spawnVortex(Math.random() * width, Math.random() * height);
+
+      animationRef.current = requestAnimationFrame(animate);
+    }
+
+    const handleResize = () => {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+    };
+
+    const handleClick = (e: MouseEvent) => {
+      const choice = Math.random();
+      if (choice < 0.33) spawnCore(e.clientX, e.clientY);
+      else if (choice < 0.66) spawnMatrix(e.clientX, e.clientY);
+      else spawnParticle(e.clientX, e.clientY);
+    };
+
+    window.addEventListener("resize", handleResize);
+    canvas.addEventListener("click", handleClick);
+
+    animate();
+
+    return () => {
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+      window.removeEventListener("resize", handleResize);
+      canvas.removeEventListener("click", handleClick);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+        zIndex: -1,
+        background: "black",
+      }}
+    />
+  );
+}
