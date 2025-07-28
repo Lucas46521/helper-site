@@ -39,9 +39,9 @@ body {
 }
 
 .section-blur {
-  background-color: rgba(30, 30, 30, 0.6); /* cinza com opacidade */
-  backdrop-filter: blur(12px); /* equivalente a ~30% de blur visual */
-  -webkit-backdrop-filter: blur(12px); /* Safari support */
-  border-radius: 1rem;
-  padding: 1rem;
-}
+    @apply backdrop-blur-sm bg-white/5 border border-white/10 rounded-xl p-6 shadow-xl;
+  }
+
+  .user-header {
+    @apply backdrop-blur-sm bg-black/20 border border-white/10 rounded-full;
+  }

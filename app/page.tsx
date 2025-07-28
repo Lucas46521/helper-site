@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import botData from './bot-data.json';
 import ElectricBackground from './components/ElectricBackground';
+import UserHeader from './components/UserHeader';
 
 interface BotInfo {
   username: string;
@@ -57,6 +58,7 @@ export default function Home() {
   return (
     <main className="min-h-screen relative overflow-hidden">
       <ElectricBackground />
+      <UserHeader />
 
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen text-center px-4 py-12">
         {botInfo && (
