@@ -1,6 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(req: NextRequest) {
+import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+
+export async function GET(request: NextRequest) {
   const API_URL = process.env.INT_API;
   const API_TOKEN = process.env.INT_API_TOKEN;
 
@@ -10,11 +12,20 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Configuração da API incorreta' }, { status: 500 });
     }
 
-    const { searchParams } = new URL(req.url);
-    const userId = searchParams.get('userId');
+    const { searchParams } = new URL(request.url);
+    let userId = searchParams.get('userId');
 
+    // Se não tiver userId na query, buscar do usuário logado
     if (!userId) {
-      return NextResponse.json({ error: 'Parâmetro "userId" é obrigatório' }, { status: 400 });
+      const cookieStore = await cookies();
+      const userCookie = cookieStore.get('discord_user');
+      
+      if (!userCookie) {
+        return NextResponse.json({ error: 'Usuário não autenticado' }, { status: 401 });
+      }
+
+      const user = JSON.parse(userCookie.value);
+      userId = user.id;
     }
 
     const response = await fetch(`${API_URL}/user/${userId}`, {
@@ -34,6 +45,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       userId,
       data: userData,
+      money: userData.money || 0,
+      bank: userData.bank || 0,
       lastUpdated: new Date().toISOString()
     });
   } catch (error) {
@@ -42,4 +55,4 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export const revalidate = 60;
+export const revalidate = 30;

@@ -28,7 +28,7 @@ export default function UserHeader() {
     
     setFinancialLoading(true);
     try {
-      const response = await fetch('/api/user-finances');
+      const response = await fetch('/api/user-info');
       if (response.ok) {
         const data = await response.json();
         setFinancialData(data);
