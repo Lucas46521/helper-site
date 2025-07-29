@@ -16,6 +16,7 @@ interface BotInfo {
   guildCount: number;
   userCount: number;
   uptime: string;
+  inviteUrl: string; // Novo campo adicionado
   features: Array<{
     title: string;
     description: string;
@@ -42,6 +43,7 @@ export default function Home() {
           const data = await response.json();
           setBotInfo(data);
         } else {
+          console.error('Erro na resposta da API:', response.status, response.statusText);
           setBotInfo(botData as BotInfo);
         }
       } catch (error) {
@@ -143,7 +145,7 @@ export default function Home() {
         {/* CTA */}
         <div className="flex flex-col sm:flex-row gap-4 mt-12">
           <a
-            href="#"
+            href={botInfo?.inviteUrl || '#'} // Usar inviteUrl com fallback para '#'
             className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold py-4 px-8 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg shadow-cyan-500/25"
           >
             🔗 Adicionar ao Discord
