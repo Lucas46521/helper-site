@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-    const response = await fetch(`${API_URL}/user/${userId}`, {
+    const response = await fetch(`http://gra-01.gratian.pro:3052/api/user/${userId}`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${API_TOKEN}`
