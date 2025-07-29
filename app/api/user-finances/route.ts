@@ -17,12 +17,10 @@ export async function GET(request: NextRequest) {
     const user = JSON.parse(userCookie.value);
     const userId = user.id;
 
-    // Fazer requisição para a API externa
     const response = await fetch(`${API_URL}/user/${userId}`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${API_TOKEN}`,
-        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${API_TOKEN}`
       }
     });
 
