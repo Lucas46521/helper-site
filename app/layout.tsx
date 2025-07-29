@@ -18,11 +18,10 @@ export const metadata: Metadata = {
     template: "%s | Ajudante",
   },
   description:
-    "Conheça o Ajudante, seu bot inteligente no Discord com recursos de música, moderação, economia e muito mais! Adicione-o ao seu servidor hoje mesmo.",
+    "Conheça o Ajudante, seu bot inteligente no Discord com recursos de moderação, economia e muito mais! Adicione-o ao seu servidor hoje mesmo.",
   keywords: [
     "Discord bot",
     "Ajudante",
-    "bot de música",
     "moderação Discord",
     "economia Discord",
     "bot de comandos",
