@@ -5,6 +5,9 @@ export async function GET(request: NextRequest) {
   const API_URL = process.env.INT_API;
   const API_TOKEN = process.env.INT_API_TOKEN;
 
+  // Declarar userId fora do bloco try
+  let userId: string | null = null;
+
   try {
     if (!API_URL || !API_TOKEN) {
       console.error('Variáveis de ambiente INT_API ou INT_API_TOKEN não definidas.');
@@ -12,7 +15,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    let userId = searchParams.get('userId');
+    userId = searchParams.get('userId');
 
     // Se não tiver userId na query, buscar do usuário logado
     if (!userId) {
@@ -65,7 +68,7 @@ export async function GET(request: NextRequest) {
       lastUpdated: new Date().toISOString()
     });
   } catch (error) {
-    console.error(`Erro ao fazer fetch para API externa (userId: ${userId}):`, error);
+    console.error(`Erro ao fazer fetch para API externa (userId: ${userId ?? 'desconhecido'}):`, error);
     return NextResponse.json({ error: 'Falha ao buscar informações do usuário' }, { status: 500 });
   }
 }
