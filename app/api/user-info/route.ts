@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
@@ -19,24 +18,40 @@ export async function GET(request: NextRequest) {
     if (!userId) {
       const cookieStore = await cookies();
       const userCookie = cookieStore.get('discord_user');
-      
+
       if (!userCookie) {
         return NextResponse.json({ error: 'Usuário não autenticado' }, { status: 401 });
       }
 
-      const user = JSON.parse(userCookie.value);
+      let user;
+      try {
+        user = JSON.parse(userCookie.value);
+      } catch (error) {
+        console.error('Erro ao parsear cookie discord_user:', error);
+        return NextResponse.json({ error: 'Cookie de usuário inválido' }, { status: 401 });
+      }
       userId = user.id;
     }
+
+    if (!userId || typeof userId !== 'string' || userId.trim() === '') {
+      return NextResponse.json({ error: 'userId inválido' }, { status: 400 });
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
 
     const response = await fetch(`${API_URL}/user/${userId}`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${API_TOKEN}`
-      }
+      },
+      signal: controller.signal
     });
 
+    clearTimeout(timeoutId);
+
     if (!response.ok) {
-      console.error('Erro na API externa:', response.status, response.statusText);
+      console.error(`Erro na API externa para userId ${userId}:`, response.status, response.statusText);
       return NextResponse.json({ error: 'Erro ao buscar dados do usuário' }, { status: 502 });
     }
 
@@ -50,7 +65,7 @@ export async function GET(request: NextRequest) {
       lastUpdated: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Erro ao fazer fetch para API externa:', error);
+    console.error(`Erro ao fazer fetch para API externa (userId: ${userId}):`, error);
     return NextResponse.json({ error: 'Falha ao buscar informações do usuário' }, { status: 500 });
   }
 }
