@@ -13,8 +13,27 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MeuBot - Discord Bot",
-  description: "Seu assistente inteligente no Discord - Música, Moderação e muito mais!",
+  title: {
+    default: "Ajudante - Seu Assistente Inteligente no Discord",
+    template: "%s | Ajudante",
+  },
+  description:
+    "Conheça o Ajudante, seu bot inteligente no Discord com recursos de música, moderação, economia e muito mais! Adicione-o ao seu servidor hoje mesmo.",
+  keywords: [
+    "Discord bot",
+    "Ajudante",
+    "bot de música",
+    "moderação Discord",
+    "economia Discord",
+    "bot de comandos",
+    "assistente Discord",
+    "servidores Discord",
+  ],
+  authors: [{ name: "Lucas46521", url: "https://github.com/Lucas46521" }],
+  creator: "Lucas46521",
+  publisher: "Lucas46521",
+  metadataBase: new URL("https://helper-site-two.vercel.app"),
+  
 };
 
 export default function RootLayout({
