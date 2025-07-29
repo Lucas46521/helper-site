@@ -42,4 +42,4 @@ export async function GET() {
   }
 }
 
-export const revalidate = 30; = 300;
+export const revalidate = 300;
