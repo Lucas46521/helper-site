@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const response = await fetch(`${API_URL}/user/${userId}`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${API_TOKEN}`
+        'Authorization': `Bearer ${API_TOKEN}`,
         'Content-Type': 'application/json',
       }
     });
