@@ -1,8 +1,9 @@
-import { NextResponse } from 'next/server';
-const API_URL = process.env.INT_API;
-const API_TOKEN = process.env.INT_API_TOKEN;
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(req) {
+export async function GET(req: NextRequest) {
+  const API_URL = process.env.INT_API;
+  const API_TOKEN = process.env.INT_API_TOKEN;
+
   try {
     if (!API_URL || !API_TOKEN) {
       console.error('Variáveis de ambiente INT_API ou INT_API_TOKEN não definidas.');
