@@ -6,8 +6,6 @@ export async function GET(request: NextRequest) {
   const cookieStore = await cookies();
   const userCookie = cookieStore.get('discord_user');
   const tokenCookie = cookieStore.get('discord_token');
-  const API_URL = process.env.INT_API;
-  const API_TOKEN = process.env.INT_API_TOKEN;
 
   if (!userCookie || !tokenCookie) {
     return NextResponse.json({ error: 'Usuário não autenticado' }, { status: 401 });
@@ -17,23 +15,26 @@ export async function GET(request: NextRequest) {
     const user = JSON.parse(userCookie.value);
     const userId = user.id;
 
-    const response = await fetch(`${API_URL}/user/${userId}`, {
+    // Usar a rota user-info que já existe
+    const baseUrl = request.nextUrl.origin;
+    const response = await fetch(`${baseUrl}/api/user-info?userId=${userId}`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${API_TOKEN}`
+        'Content-Type': 'application/json',
       }
     });
 
     if (!response.ok) {
-      console.error('Erro na API financeira:', response.status, response.statusText);
+      console.error('Erro na API user-info:', response.status, response.statusText);
       return NextResponse.json({ error: 'Erro ao buscar dados financeiros' }, { status: 502 });
     }
 
-    const financialData = await response.json();
+    const result = await response.json();
+    const userData = result.data;
 
     return NextResponse.json({
-      money: financialData.money || 0,
-      bank: financialData.bank || 0,
+      money: userData.money || 0,
+      bank: userData.bank || 0,
       userId: userId,
       lastUpdated: new Date().toISOString()
     });
