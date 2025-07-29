@@ -6,6 +6,8 @@ export async function GET(request: NextRequest) {
   const cookieStore = await cookies();
   const userCookie = cookieStore.get('discord_user');
   const tokenCookie = cookieStore.get('discord_token');
+  const API_URL = process.env.INT_API;
+  const API_TOKEN = process.env.INT_API_TOKEN;
 
   if (!userCookie || !tokenCookie) {
     return NextResponse.json({ error: 'Usuário não autenticado' }, { status: 401 });
@@ -16,9 +18,10 @@ export async function GET(request: NextRequest) {
     const userId = user.id;
 
     // Fazer requisição para a API externa
-    const response = await fetch(`http://gra-01.gratian.pro:3052/api/user/${userId}`, {
+    const response = await fetch(`${API_URL}/user/${userId}`, {
       method: 'GET',
       headers: {
+        'Authorization': `Bearer ${API_TOKEN}`
         'Content-Type': 'application/json',
       }
     });
