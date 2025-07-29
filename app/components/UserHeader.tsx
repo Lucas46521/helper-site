@@ -10,9 +10,35 @@ interface User {
   avatar: string | null;
 }
 
+interface FinancialData {
+  money: number;
+  bank: number;
+  userId: string;
+  lastUpdated: string;
+}
+
 export default function UserHeader() {
   const [user, setUser] = useState<User | null>(null);
+  const [financialData, setFinancialData] = useState<FinancialData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [financialLoading, setFinancialLoading] = useState(false);
+
+  const fetchFinancialData = async () => {
+    if (!user) return;
+    
+    setFinancialLoading(true);
+    try {
+      const response = await fetch('/api/user-finances');
+      if (response.ok) {
+        const data = await response.json();
+        setFinancialData(data);
+      }
+    } catch (error) {
+      console.error('Error fetching financial data:', error);
+    } finally {
+      setFinancialLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -29,6 +55,12 @@ export default function UserHeader() {
 
     fetchUser();
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      fetchFinancialData();
+    }
+  }, [user]);
 
   const handleLogin = () => {
     window.location.href = '/api/auth/discord?action=login';
@@ -52,7 +84,7 @@ export default function UserHeader() {
     <div className="absolute top-4 right-4 z-20">
       <div className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-full px-4 py-2">
         {user ? (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               {user.avatar ? (
                 <img
@@ -65,16 +97,41 @@ export default function UserHeader() {
                   {user.username[0].toUpperCase()}
                 </div>
               )}
-              <span className="text-white text-sm font-medium">
-                {user.username}#{user.discriminator}
-              </span>
+              <div className="flex flex-col">
+                <span className="text-white text-sm font-medium">
+                  {user.username}#{user.discriminator}
+                </span>
+                {financialData && !financialLoading && (
+                  <div className="flex gap-3 text-xs">
+                    <span className="text-green-400">
+                      💰 {financialData.money.toLocaleString()}
+                    </span>
+                    <span className="text-blue-400">
+                      🏦 {financialData.bank.toLocaleString()}
+                    </span>
+                  </div>
+                )}
+                {financialLoading && (
+                  <span className="text-gray-400 text-xs">Carregando finanças...</span>
+                )}
+              </div>
             </div>
-            <button
-              onClick={handleLogout}
-              className="text-red-400 hover:text-red-300 text-sm transition-colors"
-            >
-              Sair
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={fetchFinancialData}
+                disabled={financialLoading}
+                className="text-cyan-400 hover:text-cyan-300 text-xs transition-colors disabled:opacity-50"
+                title="Atualizar dados financeiros"
+              >
+                🔄
+              </button>
+              <button
+                onClick={handleLogout}
+                className="text-red-400 hover:text-red-300 text-sm transition-colors"
+              >
+                Sair
+              </button>
+            </div>
           </div>
         ) : (
           <button
