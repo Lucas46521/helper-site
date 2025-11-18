@@ -2,6 +2,44 @@
 
 import { useEffect, useRef } from "react";
 
+/* ------------------------------- PERLIN NOISE ------------------------------- */
+// Perlin Noise simples para suavizar movimentos e ângulos
+function generatePerm() {
+  const perm = new Uint8Array(512);
+  for (let i = 0; i < 256; i++) perm[i] = i;
+  for (let i = 0; i < 256; i++) {
+    const j = Math.floor(Math.random() * 256);
+    const tmp = perm[i];
+    perm[i] = perm[j];
+    perm[j] = tmp;
+  }
+  for (let i = 0; i < 256; i++) perm[i + 256] = perm[i];
+  return perm;
+}
+
+const perm = generatePerm();
+function perlin2D(x: number, y: number) {
+  const xi = Math.floor(x) & 255;
+  const yi = Math.floor(y) & 255;
+
+  const xf = x - Math.floor(x);
+  const yf = y - Math.floor(y);
+
+  const u = xf * xf * (3 - 2 * xf);
+  const v = yf * yf * (3 - 2 * yf);
+
+  const aa = perm[perm[xi] + yi];
+  const ba = perm[perm[xi + 1] + yi];
+  const ab = perm[perm[xi] + yi + 1];
+  const bb = perm[perm[xi + 1] + yi + 1];
+
+  const x1 = aa + u * (ba - aa);
+  const x2 = ab + u * (bb - ab);
+
+  return (x1 + v * (x2 - x1)) / 255;
+}
+
+/* ----------------------------- INTERFACES ----------------------------------- */
 interface Particle {
   x: number;
   y: number;
@@ -44,6 +82,7 @@ interface Vortex {
   rotation: number;
 }
 
+/* --------------------------- COMPONENTE PRINCIPAL --------------------------- */
 export default function EnergyBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | null>(null);
@@ -51,371 +90,331 @@ export default function EnergyBackground() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    /* ------------------------------ SIZE SETUP ----------------------------- */
     let width = window.innerWidth;
     let height = window.innerHeight;
     canvas.width = width;
     canvas.height = height;
 
+    ctx.globalCompositeOperation = "lighter";
+
+    /* ---------------------------- ELEMENT ARRAYS -------------------------- */
     const particles: Particle[] = [];
     const cores: Core[] = [];
     const beams: Beam[] = [];
     const matrices: Matrix[] = [];
     const vortices: Vortex[] = [];
 
-    // Inicializar elementos
-    spawnCore(width / 2, height / 2);
-    spawnMatrix(width / 4, height / 4);
-    spawnVortex((3 * width) / 4, (3 * height) / 4);
-    spawnParticle(width * 0.75, height * 0.75);
+    /* --------------------------- SPAWN FUNCTIONS -------------------------- */
 
     function spawnParticle(x?: number, y?: number) {
-  if (particles.length >= 80) return;
-  const life = 180 + Math.random() * 180;
-  particles.push({
-    x: x ?? Math.random() * width,
-    y: y ?? Math.random() * height,
-    angle: Math.random() * Math.PI * 2,
-    speed: 0.3 + Math.random() * 0.4,
-    life,
-    maxLife: life,
-    radius: 3 + Math.random() * 3,
-    pulse: 0,
-  });
-}
+      if (particles.length >= 100) return;
+
+      const life = 180 + Math.random() * 180;
+
+      particles.push({
+        x: x ?? Math.random() * width,
+        y: y ?? Math.random() * height,
+        angle: Math.random() * Math.PI * 2,
+        speed: 0.4 + Math.random() * 0.4,
+        life,
+        maxLife: life,
+        radius: 2.5 + Math.random() * 3,
+        pulse: 0,
+      });
+    }
 
     function spawnCore(x: number, y: number) {
       if (cores.length >= 8) return;
-      cores.push({ x, y, pulse: 0, life: 600, energy: 0, rotation: 0 });
-    }
-
-    function spawnBeam(fromX: number, fromY: number, toX: number, toY: number, fromParticle: boolean = false) {
-      const path = [];
-      const segments = 6 + Math.floor(Math.random() * 3);
-      const distance = Math.hypot(toX - fromX, toY - fromY);
-      for (let i = 0; i <= segments; i++) {
-        const t = i / segments;
-        const maxDeviation = Math.min(distance * 0.1, 50);
-        const x = fromX + (toX - fromX) * t + (Math.random() - 0.5) * maxDeviation;
-        const y = fromY + (toY - fromY) * t + (Math.random() - 0.5) * maxDeviation;
-        path.push({ x, y });
-      }
-      beams.push({ path, life: 20 });
+      cores.push({
+        x,
+        y,
+        pulse: 0,
+        life: 700,
+        energy: 0,
+        rotation: 0,
+      });
     }
 
     function spawnMatrix(x: number, y: number) {
-      if (matrices.length >= 5) return;
+      if (matrices.length >= 6) return;
       matrices.push({
         x,
         y,
         radius: 20,
         rotation: 0,
-        life: 400,
+        life: 450,
       });
     }
 
     function spawnVortex(x: number, y: number) {
-      if (vortices.length >= 3) return;
+      if (vortices.length >= 4) return;
       vortices.push({
         x,
         y,
-        radius: 50,
-        strength: 0.075 + Math.random() * 0.075,
-        life: 300,
+        radius: 55,
+        strength: 0.06 + Math.random() * 0.07,
+        life: 350,
         rotation: 0,
       });
     }
 
-    function drawBackground() {
-      // Fundo preto
-      ctx!.fillStyle = "#000000";
-      ctx!.fillRect(0, 0, width, height);
+    function spawnBeam(fromX: number, fromY: number, toX: number, toY: number) {
+      const path = [];
+      const segments = 6 + Math.floor(Math.random() * 3);
+      const distance = Math.hypot(toX - fromX, toY - fromY);
 
-      // Grid futurista
-      ctx!.strokeStyle = "rgba(0, 200, 255, 0.1)";
-      ctx!.lineWidth = 1;
-      // Linhas verticais
-      for (let x = 0; x < width; x += 50) {
-        ctx!.beginPath();
-        ctx!.moveTo(x, 0);
-        ctx!.lineTo(x, height);
-        ctx!.stroke();
-      }
-      // Linhas horizontais
-      for (let y = 0; y < height; y += 50) {
-        ctx!.beginPath();
-        ctx!.moveTo(0, y);
-        ctx!.lineTo(width, y);
-        ctx!.stroke();
+      for (let i = 0; i <= segments; i++) {
+        const t = i / segments;
+        const dev = Math.min(distance * 0.1, 45);
+
+        path.push({
+          x: fromX + (toX - fromX) * t + (Math.random() - 0.5) * dev,
+          y: fromY + (toY - fromY) * t + (Math.random() - 0.5) * dev,
+        });
       }
 
-      // Brilho pulsante
-      for (let i = 0; i < 10; i++) {
-        const x = Math.random() * width;
-        const y = Math.random() * height;
-        ctx!.beginPath();
-        ctx!.arc(x, y, 2 + Math.random(), 0, Math.PI * 2);
-        ctx!.fillStyle = `rgba(0, 255, 255, ${Math.sin(Date.now() * 0.001 + i) * 0.2 + 0.3})`;
-        ctx!.fill();
+      beams.push({ path, life: 22 });
+    }
+
+    /* ----------------------------- BACKGROUND ------------------------------ */
+    function drawBackground(time: number) {
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 0, width, height);
+
+      // GRID + SUAVE PULSO DE PERLIN
+      const glow = (perlin2D(time * 0.0005, 0) * 0.3 + 0.2).toFixed(3);
+
+      ctx.strokeStyle = `rgba(0,150,255,${glow})`;
+      ctx.lineWidth = 0.8;
+
+      for (let x = 0; x < width; x += 55) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+      }
+
+      for (let y = 0; y < height; y += 55) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
       }
     }
 
-    function animate() {
-      if (!ctx) return;
+    /* ------------------------------- ANIMATE ------------------------------- */
+    const animate = (time: number) => {
       ctx.clearRect(0, 0, width, height);
 
-      // Desenhar fundo moderno
-      drawBackground();
+      drawBackground(time);
 
-      // Vórtices (hexágono duplo com pontos girando)
+      /* ----------------------------- VÓRTICES ----------------------------- */
       for (let i = vortices.length - 1; i >= 0; i--) {
-        const vortex = vortices[i];
-        vortex.life--;
-        vortex.rotation += 0.025;
+        const v = vortices[i];
+        v.life--;
+        v.rotation += 0.02;
 
-        // Desenhar hexágono duplo
-        ctx.beginPath();
-        for (let j = 0; j < 6; j++) {
-          const angle = (j / 6) * Math.PI * 2 + vortex.rotation;
-          const x = vortex.x + Math.cos(angle) * vortex.radius;
-          const y = vortex.y + Math.sin(angle) * vortex.radius;
-          ctx[j === 0 ? "moveTo" : "lineTo"](x, y);
-        }
-        ctx.closePath();
-        ctx.strokeStyle = `rgba(0, 100, 255, ${vortex.life / 300})`;
-        ctx.lineWidth = 1;
-        ctx.stroke();
+        const alpha = v.life / 350;
+
+        // Hex neon
+        ctx.strokeStyle = `rgba(0,200,255,${alpha})`;
+        ctx.lineWidth = 1.3;
 
         ctx.beginPath();
         for (let j = 0; j < 6; j++) {
-          const angle = (j / 6) * Math.PI * 2 - vortex.rotation;
-          const x = vortex.x + Math.cos(angle) * (vortex.radius * 0.7);
-          const y = vortex.y + Math.sin(angle) * (vortex.radius * 0.7);
+          const a = (j / 6) * Math.PI * 2 + v.rotation;
+          const x = v.x + Math.cos(a) * v.radius;
+          const y = v.y + Math.sin(a) * v.radius;
           ctx[j === 0 ? "moveTo" : "lineTo"](x, y);
         }
         ctx.closePath();
-        ctx.strokeStyle = `rgba(0, 150, 255, ${vortex.life / 300})`;
-        ctx.lineWidth = 1;
         ctx.stroke();
 
-        // Pontos girando
+        // Inner hex
+        ctx.beginPath();
+        for (let j = 0; j < 6; j++) {
+          const a = (j / 6) * Math.PI * 2 - v.rotation;
+          const x = v.x + Math.cos(a) * (v.radius * 0.7);
+          const y = v.y + Math.sin(a) * (v.radius * 0.7);
+          ctx[j === 0 ? "moveTo" : "lineTo"](x, y);
+        }
+        ctx.closePath();
+        ctx.strokeStyle = `rgba(0,120,255,${alpha})`;
+        ctx.stroke();
+
+        // Rotating dots
         for (let j = 0; j < 4; j++) {
-          const angle = (j / 4) * Math.PI * 2 + vortex.rotation * 2;
-          const x = vortex.x + Math.cos(angle) * (vortex.radius * 0.5);
-          const y = vortex.y + Math.sin(angle) * (vortex.radius * 0.5);
+          const a = (j / 4) * Math.PI * 2 + v.rotation * 1.8;
+          const x = v.x + Math.cos(a) * (v.radius * 0.45);
+          const y = v.y + Math.sin(a) * (v.radius * 0.45);
+
           ctx.beginPath();
-          ctx.arc(x, y, 2, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(0, 200, 255, ${vortex.life / 300})`;
+          ctx.arc(x, y, 2.2, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(0,220,255,${alpha})`;
           ctx.fill();
         }
 
-        // Atração e destruição de elementos próximos
-        particles.forEach(p => {
-          const dist = Math.hypot(p.x - vortex.x, p.y - vortex.y);
-          if (dist < vortex.radius && dist > 0) {
-            const force = vortex.strength * (1 - dist / vortex.radius);
-            p.angle = Math.atan2(vortex.y - p.y, vortex.x - p.x);
-            p.speed += force;
-            p.x += Math.cos(p.angle) * p.speed;
-            p.y += Math.sin(p.angle) * p.speed;
-            if (dist < vortex.radius * 0.3) p.life = 0;
-          }
-        });
-
-        cores.forEach(c => {
-          const dist = Math.hypot(c.x - vortex.x, c.y - vortex.y);
-          if (dist < vortex.radius && dist > 0) {
-            const force = vortex.strength * (1 - dist / vortex.radius) * 0.5;
-            const dx = (vortex.x - c.x) / dist;
-            const dy = (vortex.y - c.y) / dist;
-            c.x += dx * force * 2;
-            c.y += dy * force * 2;
-            if (dist < vortex.radius * 0.3) c.life = 0;
-          }
-        });
-
-        matrices.forEach(m => {
-          const dist = Math.hypot(m.x - vortex.x, m.y - vortex.y);
-          if (dist < vortex.radius && dist > 0) {
-            const force = vortex.strength * (1 - dist / vortex.radius) * 0.5;
-            const dx = (vortex.x - m.x) / dist;
-            const dy = (vortex.y - m.y) / dist;
-            m.x += dx * force * 2;
-            m.y += dy * force * 2;
-            if (dist < vortex.radius * 0.3) m.life = 0;
-          }
-        });
-
-        // Mini explosão ao sumir
-        if (vortex.life <= 0) {
-          for (let j = 0; j < 5; j++) {
-            spawnParticle(vortex.x, vortex.y);
-          }
-          vortices.splice(i, 1);
-        }
+        if (v.life <= 0) vortices.splice(i, 1);
       }
 
-      // Matrizes (raios girando conectados a um ponto)
+      /* ------------------------------ MATRIZES ----------------------------- */
       for (let i = matrices.length - 1; i >= 0; i--) {
-        const matrix = matrices[i];
-        matrix.rotation += 0.025;
-        matrix.life--;
+        const m = matrices[i];
+        m.life--;
+        m.rotation += 0.02;
 
-        // Desenhar ponto central
+        const alpha = m.life / 450;
+
+        // Center dot
         ctx.beginPath();
-        ctx.arc(matrix.x, matrix.y, 5, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(0, 200, 255, ${matrix.life / 400})`;
+        ctx.arc(m.x, m.y, 5, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0,200,255,${alpha})`;
         ctx.fill();
 
-        // Raios girando
+        // Spinning rays
         for (let j = 0; j < 8; j++) {
-          const angle = (j / 8) * Math.PI * 2 + matrix.rotation;
-          const x = matrix.x + Math.cos(angle) * matrix.radius;
-          const y = matrix.y + Math.sin(angle) * matrix.radius;
+          const a = (j / 8) * Math.PI * 2 + m.rotation;
+          const x = m.x + Math.cos(a) * m.radius;
+          const y = m.y + Math.sin(a) * m.radius;
+
           ctx.beginPath();
-          ctx.moveTo(matrix.x, matrix.y);
+          ctx.moveTo(m.x, m.y);
           ctx.lineTo(x, y);
-          ctx.strokeStyle = `rgba(0, 150, 255, ${matrix.life / 400})`;
+          ctx.strokeStyle = `rgba(0,150,255,${alpha})`;
           ctx.lineWidth = 1;
           ctx.stroke();
         }
 
-        // Lançar até 3 feixes para partículas e vórtices próximos
-        if (Math.random() < 0.2) {
-          const targets = [
-            ...particles.filter(p => Math.hypot(p.x - matrix.x, p.y - matrix.y) < 100),
-            ...vortices.filter(v => Math.hypot(v.x - matrix.x, v.y - matrix.y) < 100),
-          ];
-          const numBeams = Math.min(targets.length, 3);
-          for (let j = 0; j < numBeams; j++) {
-            const target = targets[Math.floor(Math.random() * targets.length)];
-            spawnBeam(matrix.x, matrix.y, target.x, target.y);
+        // Auto-beams
+        if (Math.random() < 0.18) {
+          const close = particles.filter(p => Math.hypot(p.x - m.x, p.y - m.y) < 120);
+          if (close.length) {
+            const t = close[Math.floor(Math.random() * close.length)];
+            spawnBeam(m.x, m.y, t.x, t.y);
           }
         }
 
-        if (matrix.life <= 0) matrices.splice(i, 1);
+        if (m.life <= 0) matrices.splice(i, 1);
       }
 
-      // Núcleos (círculo com triângulo central rotativo)
+      /* ------------------------------- NÚCLEOS ------------------------------ */
       for (let i = cores.length - 1; i >= 0; i--) {
-        const core = cores[i];
-        core.pulse += 0.1;
-        core.rotation += 0.025;
-        core.life--;
-        core.energy += 0.1;
+        const c = cores[i];
+        c.pulse += 0.1;
+        c.rotation += 0.02;
+        c.life--;
+        c.energy += 0.12;
 
-        // Desenhar círculo
-        const radius = 15 + 5 * Math.sin(core.pulse);
+        const alpha = c.life / 700;
+
+        const radius = 15 + 5 * Math.sin(c.pulse);
+
+        // Glow circle
         ctx.beginPath();
-        ctx.arc(core.x, core.y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(0, 255, 255, 0.1)`;
+        ctx.arc(c.x, c.y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0,255,255,0.12)`;
         ctx.fill();
-        ctx.strokeStyle = `rgba(0, 200, 255, 0.3)`;
-        ctx.lineWidth = 1.2;
+
+        ctx.strokeStyle = `rgba(0,200,255,0.35)`;
+        ctx.lineWidth = 1.3;
         ctx.stroke();
 
-        // Desenhar triângulo central
+        // Rotating triangle
         ctx.beginPath();
         for (let j = 0; j < 3; j++) {
-          const angle = (j / 3) * Math.PI * 2 + core.rotation;
-          const x = core.x + Math.cos(angle) * (radius * 0.5);
-          const y = core.y + Math.sin(angle) * (radius * 0.5);
+          const a = (j / 3) * Math.PI * 2 + c.rotation;
+          const x = c.x + Math.cos(a) * (radius * 0.55);
+          const y = c.y + Math.sin(a) * (radius * 0.55);
+
           ctx[j === 0 ? "moveTo" : "lineTo"](x, y);
         }
         ctx.closePath();
-        ctx.fillStyle = `rgba(0, 200, 255, ${core.life / 600})`;
+        ctx.fillStyle = `rgba(0,200,255,${alpha})`;
         ctx.fill();
 
-        // Divisão do núcleo
-        if (core.energy > 100 && Math.random() < 0.02) {
-          spawnCore(core.x + (Math.random() - 0.5) * 50, core.y + (Math.random() - 0.5) * 50);
-          core.energy = 0;
+        // Core division
+        if (c.energy > 100 && Math.random() < 0.02) {
+          spawnCore(c.x + (Math.random() - 0.5) * 50, c.y + (Math.random() - 0.5) * 50);
+          c.energy = 0;
         }
 
-        // Feixes para partículas próximas
-        if (Math.random() < 0.2) {
-          const close = particles.filter(p => Math.hypot(p.x - core.x, p.y - core.y) < 100);
-          if (close.length > 0) {
-            const target = close[Math.floor(Math.random() * close.length)];
-            spawnBeam(core.x, core.y, target.x, target.y);
+        if (c.life <= 0) cores.splice(i, 1);
+      }
+
+      /* ------------------------------- BEAMS -------------------------------- */
+      for (let i = beams.length - 1; i >= 0; i--) {
+        const b = beams[i];
+
+        ctx.beginPath();
+        ctx.moveTo(b.path[0].x, b.path[0].y);
+
+        for (const p of b.path) ctx.lineTo(p.x, p.y);
+
+        ctx.strokeStyle = `rgba(0,255,255,${b.life / 22})`;
+        ctx.lineWidth = 1.3;
+        ctx.stroke();
+
+        b.life--;
+        if (b.life <= 0) beams.splice(i, 1);
+      }
+
+      /* ------------------------------ PARTÍCULAS ---------------------------- */
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+
+        p.pulse += 0.1;
+
+        // Perlin controla direção
+        const noise = perlin2D(p.x * 0.002, p.y * 0.002);
+        p.angle += (noise - 0.5) * 0.25;
+
+        p.x += Math.cos(p.angle) * p.speed;
+        p.y += Math.sin(p.angle) * p.speed;
+
+        p.life--;
+
+        const alpha = Math.min(1, p.life / p.maxLife);
+
+        // Glow
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius + 1.5, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0,180,255,${0.12 * alpha})`;
+        ctx.fill();
+
+        // Core sparkle
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0,255,255,${(Math.sin(p.pulse) * 0.5 + 0.5) * alpha})`;
+        ctx.fill();
+
+        // Random beams
+        if (Math.random() < 0.01) {
+          const targets = particles.filter(
+            o => o !== p && Math.hypot(o.x - p.x, o.y - p.y) < 100
+          );
+          if (targets.length) {
+            const t = targets[Math.floor(Math.random() * targets.length)];
+            spawnBeam(p.x, p.y, t.x, t.y);
           }
         }
 
-        if (core.life <= 0) cores.splice(i, 1);
+        if (p.life <= 0) particles.splice(i, 1);
       }
 
-      // Feixes
-      for (let i = beams.length - 1; i >= 0; i--) {
-        const beam = beams[i];
-        ctx.beginPath();
-        ctx.moveTo(beam.path[0].x, beam.path[0].y);
-        for (const point of beam.path) ctx.lineTo(point.x, point.y);
-        ctx.strokeStyle = `rgba(0, 255, 255, ${beam.life / 20})`;
-        ctx.lineWidth = 1.2;
-        ctx.stroke();
-        beam.life--;
-        if (beam.life <= 0) beams.splice(i, 1);
-      }
-
-      // Partículas
-      for (let i = particles.length - 1; i >= 0; i--) {
-  const p = particles[i];
-  p.pulse += 0.1;
-  p.angle += (Math.random() - 0.5) * 0.2;
-  p.x += Math.cos(p.angle) * p.speed;
-  p.y += Math.sin(p.angle) * p.speed;
-  p.life--;
-
-  // Atração e interação com outras partículas
-  particles.forEach(other => {
-    if (other !== p) {
-      const dist = Math.hypot(p.x - other.x, p.y - other.y);
-      if (dist < 50 && dist > 0) {
-        const force = 0.02 * (Math.random() < 0.5 ? 1 : -1);
-        p.angle = Math.atan2(other.y - p.y, other.x - p.x);
-        p.speed += force;
-        if (dist < p.radius + other.radius && Math.random() < 0.1) {
-          spawnMatrix(p.x, p.y);
-          p.life = 0;
-          other.life = 0;
-        }
-      }
-    }
-  });
-
-  // Desenhar partícula como faísca suave
-  const alpha = Math.min(1, p.life / p.maxLife);
-  ctx.beginPath();
-  ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-  ctx.fillStyle = `rgba(0, 255, 255, ${(Math.sin(p.pulse) * 0.5 + 0.5) * alpha})`;
-  ctx.fill();
-
-  // Feixes aleatórios para outras partículas
-  if (Math.random() < 0.01) {
-    const targets = particles.filter(n => n !== p && Math.hypot(n.x - p.x, n.y - p.y) < 100);
-    if (targets.length > 0) {
-      const target = targets[Math.floor(Math.random() * targets.length)];
-      spawnBeam(p.x, p.y, target.x, target.y, true);
-    }
-  }
-
-  if (p.life <= 0) {
-    p.radius -= 0.1;
-    if (p.radius <= 0.1) particles.splice(i, 1);
-  }
-}
-
-      // Geração aleatória de elementos
-      if (particles.length < 80 && Math.random() < 0.15) spawnParticle();
-      if (Math.random() < 0.05) spawnParticle();
-      if (Math.random() < 0.005) spawnCore(Math.random() * width, Math.random() * height);
-      if (Math.random() < 0.005) spawnVortex(Math.random() * width, Math.random() * height);
+      /* ----------------------- RANDOM SPAWNING --------------------------- */
+      if (particles.length < 90 && Math.random() < 0.18) spawnParticle();
+      if (Math.random() < 0.004) spawnCore(Math.random() * width, Math.random() * height);
+      if (Math.random() < 0.004) spawnVortex(Math.random() * width, Math.random() * height);
 
       animationRef.current = requestAnimationFrame(animate);
-    }
+    };
 
+    /* ---------------------------- EVENT LISTENERS ----------------------------- */
     const handleResize = () => {
       width = window.innerWidth;
       height = window.innerHeight;
@@ -424,17 +423,18 @@ export default function EnergyBackground() {
     };
 
     const handleClick = (e: MouseEvent) => {
-      const choice = Math.random();
-      if (choice < 0.33) spawnCore(e.clientX, e.clientY);
-      else if (choice < 0.66) spawnMatrix(e.clientX, e.clientY);
+      const r = Math.random();
+      if (r < 0.33) spawnCore(e.clientX, e.clientY);
+      else if (r < 0.66) spawnMatrix(e.clientX, e.clientY);
       else spawnParticle(e.clientX, e.clientY);
     };
 
     window.addEventListener("resize", handleResize);
     canvas.addEventListener("click", handleClick);
 
-    animate();
+    animate(0);
 
+    /* ----------------------------- CLEANUP ------------------------------- */
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
       window.removeEventListener("resize", handleResize);
@@ -452,7 +452,7 @@ export default function EnergyBackground() {
         width: "100%",
         height: "100%",
         zIndex: -1,
-        background: "black",
+        background: "#000",
       }}
     />
   );
