@@ -3,7 +3,6 @@
 import { useEffect, useRef } from "react";
 
 /* ------------------------------- PERLIN NOISE ------------------------------- */
-// Perlin Noise simples para suavizar movimentos e ângulos
 function generatePerm() {
   const perm = new Uint8Array(512);
   for (let i = 0; i < 256; i++) perm[i] = i;
