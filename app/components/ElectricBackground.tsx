@@ -183,6 +183,8 @@ export default function EnergyBackground() {
 
     /* ----------------------------- BACKGROUND ------------------------------ */
     function drawBackground(time: number) {
+     if (!ctx) return;
+
       ctx.fillStyle = "#000";
       ctx.fillRect(0, 0, width, height);
 
