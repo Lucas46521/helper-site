@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
-const CLIENT_ID = '1015096771661279243';
+const CLIENT_ID = '871827136179241104';
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 const REDIRECT_URI = 'https://helper-site-two.vercel.app/api/auth/discord/callback';
 
