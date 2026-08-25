@@ -51,7 +51,7 @@ body {
     @apply backdrop-blur-sm bg-black/20 border border-white/10 rounded-full;
   }
 
-.site-shell { color: var(--foreground); }
+.site-shell { color: var(--foreground); isolation: isolate; }
 .hero-grid { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(340px, .88fr); align-items: center; gap: clamp(3rem, 9vw, 9rem); }
 .hero-copy { max-width: 700px; animation: rise-in .8s ease both; }
 .eyebrow { display: flex; align-items: center; gap: 10px; color: var(--mint); font-size: 11px; font-weight: 700; letter-spacing: .18em; }
