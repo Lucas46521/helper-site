@@ -11,7 +11,7 @@ type Particle = {
   hue: number;
 };
 
-export default function BackgroundParticles(): JSX.Element {
+export default function BackgroundParticles(): React.ReactElement {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationRef = useRef<number | null>(null);
   const pointer = useRef<{ x: number; y: number; down: boolean } | null>(null);
