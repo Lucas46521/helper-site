@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import botData from '../../bot-data.json';
 
 const API_URL = process.env.INT_API;
@@ -14,8 +14,8 @@ export async function GET() {
     const response = await fetch(API_URL, {
       method: 'GET',
       headers: {
-        Authorization: `Bearer ${API_TOKEN}`
-      }
+        Authorization: `Bearer ${API_TOKEN}`,
+      },
     });
 
     if (!response.ok) {
@@ -32,7 +32,7 @@ export async function GET() {
       commands: botData.commands || [],
       uptime: botData.uptime,
       public: botData.public,
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
     };
 
     return NextResponse.json(botInfo);

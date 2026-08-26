@@ -51,7 +51,9 @@ body {
     @apply backdrop-blur-sm bg-black/20 border border-white/10 rounded-full;
   }
 
-.site-shell { color: var(--foreground); isolation: isolate; }
+.site-shell { color: var(--foreground); isolation: isolate; position: relative; z-index: 10; }
+
+.particles-canvas { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
 .hero-grid { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(340px, .88fr); align-items: center; gap: clamp(3rem, 9vw, 9rem); }
 .hero-copy { max-width: 700px; animation: rise-in .8s ease both; }
 .eyebrow { display: flex; align-items: center; gap: 10px; color: var(--mint); font-size: 11px; font-weight: 700; letter-spacing: .18em; }
@@ -103,3 +105,39 @@ body {
 @media (max-width: 800px) { .hero-grid { grid-template-columns: 1fr; gap: 52px; } .hero-copy h1 { font-size: 58px; } .hero-description { font-size: 18px; } .info-panel { max-width: 560px; } .commands-heading h2 { font-size: 40px; } }
 @media (max-width: 480px) { .hero-actions { flex-direction: column; align-items: stretch; } .primary-action, .secondary-action { justify-content: space-between; } .commands-heading { align-items: flex-start; flex-direction: column; gap: 12px; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; } }
+
+/* Responsive adjustments */
+:root {
+  --max-content-width: 1120px;
+}
+
+/* Make hero typography responsive */
+.hero-copy h1 { font-size: clamp(2.6rem, 6vw, 4.75rem); }
+.hero-description { font-size: clamp(1rem, 2.2vw, 1.25rem); }
+
+/* Ensure info panel stacks on small screens */
+@media (max-width: 900px) {
+  .hero-grid { grid-template-columns: 1fr; gap: 42px; }
+  .info-panel { order: 2; width: 100%; }
+  .hero-copy { order: 1; }
+}
+
+@media (max-width: 480px) {
+  .site-shell { padding-left: 12px; padding-right: 12px; }
+  .avatar-ring { width: 72px; height: 72px; }
+  .hero-copy h1 { font-size: 2.6rem; }
+  .commands-grid { grid-template-columns: 1fr; }
+  .feature-list { gap: 10px; }
+}
+
+/* Header adjustments */
+.site-header { position: fixed; top: 0; left: 0; right: 0; z-index: 30; }
+
+/* Particles off on small screens to save CPU and avoid touch interference */
+@media (max-width: 640px) {
+  .particles-canvas { display: none; }
+}
+
+/* ensure the main shell content stacks above the particles */
+.site-shell { position: relative; z-index: 10; }
+

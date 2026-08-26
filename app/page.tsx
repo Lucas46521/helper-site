@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 import botData from './bot-data.json';
-import ElectricBackground from './components/ElectricBackground';
-import UserHeader from './components/UserHeader';
 
 interface BotInfo {
   username: string;
@@ -58,10 +56,7 @@ export default function Home() {
 
   return (
     <main className="site-shell relative overflow-hidden">
-      <ElectricBackground />
-      <UserHeader />
-
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col justify-center px-5 py-28 sm:px-8 lg:px-12">
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col justify-center px-5 py-20 sm:px-8 lg:px-12">
         <div className="hero-grid">
           <section className="hero-copy">
             <div className="eyebrow"><span className="eyebrow-dot" /> BOT PARA DISCORD <span className="eyebrow-line" /></div>
