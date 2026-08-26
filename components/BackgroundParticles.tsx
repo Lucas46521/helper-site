@@ -127,6 +127,7 @@ export default function BackgroundParticles(): React.ReactElement {
     draw();
 
     const onPointerMove = (e: PointerEvent) => {
+      // use window-level pointer events so interaction works even when the canvas has pointer-events: none
       const rect = canvas.getBoundingClientRect();
       pointer.current = { x: e.clientX - rect.left, y: e.clientY - rect.top, down: false };
     };
@@ -154,14 +155,16 @@ export default function BackgroundParticles(): React.ReactElement {
       pointer.current = null;
     };
 
-    canvas.addEventListener("pointermove", onPointerMove);
-    canvas.addEventListener("pointerdown", onPointerDown);
+    // Attach listeners at window level so interactions are detected even when canvas doesn't receive pointer events
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerdown", onPointerDown);
+    // keep canvas leave handler in case pointer leaves canvas bounds explicitly
     canvas.addEventListener("pointerleave", onPointerLeave);
 
     return () => {
       window.removeEventListener("resize", onResize);
-      canvas.removeEventListener("pointermove", onPointerMove);
-      canvas.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerdown", onPointerDown);
       canvas.removeEventListener("pointerleave", onPointerLeave);
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
